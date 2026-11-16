@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Terms of use · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Terms of use</div>
+  <h1>Terms of use</h1>
+</div>
+<div class="prose">
+  <div class="notice">Starter text only. Have it reviewed by a lawyer and adapted before launch.</div>
+
+  <h2>Information only</h2>
+  <p>Content on {{ SITE_NAME }} is for general information and education. It is not financial, investment or legal advice, and we do not guarantee that it is complete, accurate or up to date. Verify prices with the relevant bank, supplier or exchange before acting on them.</p>
+
+  <h2>Using the datasets</h2>
+  <p>Datasets are provided for educational and non-commercial research use. Please cite {{ SITE_NAME }} and the date you accessed the data. Do not resell the data or republish it in bulk without permission.</p>
+
+  <h2>Accounts</h2>
+  <p>Keep your login details secure. We may suspend accounts that abuse the service, for example by scraping at high volume.</p>
+
+  <h2>Changes</h2>
+  <p>We may update these terms from time to time. Continued use of the site means you accept the updated terms.</p>
+</div>
+{% endblock %}

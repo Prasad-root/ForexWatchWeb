@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Historical analytics · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Analytics</div>
+  <h1>Historical analytics</h1>
+  <p>Choose a series and a time range to explore trends. Statistics update with your selection.</p>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <label for="series" class="muted">Series</label>
+    <select id="series">
+      {% for group, items in groups.items %}
+        <optgroup label="{{ group }}">
+          {% for key, label in items %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+    <div class="pills" id="ranges" role="group" aria-label="Time range">
+      <button type="button" class="pill" data-days="30">1M</button>
+      <button type="button" class="pill" data-days="90">3M</button>
+      <button type="button" class="pill" data-days="180">6M</button>
+      <button type="button" class="pill active" data-days="365">1Y</button>
+    </div>
+    <label class="check"><input type="checkbox" id="ma"> 7-day average</label>
+  </div>
+
+  <div class="chart-box"><canvas id="main-chart" role="img" aria-label="Historical chart"></canvas></div>
+
+  <div class="stat-row">
+    <div><span>Latest</span><strong id="s-latest">-</strong></div>
+    <div><span>Change over range</span><strong id="s-change">-</strong></div>
+    <div><span>High</span><strong id="s-high">-</strong></div>
+    <div><span>Low</span><strong id="s-low">-</strong></div>
+    <div><span>Average</span><strong id="s-avg">-</strong></div>
+  </div>
+</div>
+
+<p class="muted" style="margin-top:1rem;">Need the raw numbers? <a href="{% url 'datasets' %}">Download the datasets</a>.</p>
+
+{{ series|json_script:"series-data" }}
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="{% static 'js/fw-charts.js' %}"></script>
+<script>
+  (function () {
+    var all = JSON.parse(document.getElementById("series-data").textContent);
+    var select = document.getElementById("series"), ma = document.getElementById("ma");
+    var ranges = document.querySelectorAll("#ranges .pill");
+    var days = 365, chart = null;
+
+    function fmt(n, d) { return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+    function movingAverage(values, window) {
+      return values.map(function (_, i) {
+        var from = Math.max(0, i - window + 1), slice = values.slice(from, i + 1);
+        return slice.reduce(function (a, b) { return a + b; }, 0) / slice.length;
+      });
+    }
+
+    function render() {
+      var s = all[select.value], d = s.decimals;
+      var labels = s.dates.slice(-days), values = s.values.slice(-days);
+      var datasets = [{ label: s.label, data: values }];
+      if (ma.checked) {
+        datasets.push({ label: "7-day average", data: movingAverage(s.values, 7).slice(-days), borderDash: [6, 4] });
+      }
+      if (chart) { chart.destroy(); }
+      chart = fwLineChart(document.getElementById("main-chart"), labels, datasets, { fill: true, decimals: d });
+
+      var first = values[0], last = values[values.length - 1];
+      var change = (last / first - 1) * 100;
+      var sum = values.reduce(function (a, b) { return a + b; }, 0);
+      document.getElementById("s-latest").textContent = fmt(last, d) + " " + s.unit;
+      document.getElementById("s-change").textContent = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
+      document.getElementById("s-high").textContent = fmt(Math.max.apply(null, values), d);
+      document.getElementById("s-low").textContent = fmt(Math.min.apply(null, values), d);
+      document.getElementById("s-avg").textContent = fmt(sum / values.length, d);
+    }
+
+    select.addEventListener("change", render);
+    ma.addEventListener("change", render);
+    ranges.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        ranges.forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        days = parseInt(btn.dataset.days, 10);
+        render();
+      });
+    });
+    render();
+  })();
+</script>
+{% endblock %}

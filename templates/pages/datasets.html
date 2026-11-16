@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Datasets · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Datasets</div>
+  <h1>Datasets for education</h1>
+  <p>Free CSV downloads for coursework, teaching and research. Each file holds one year of daily history.</p>
+</div>
+
+{% if not user.is_authenticated %}
+  <div class="notice">
+    Downloads are free but need an account so we can keep the service sustainable and understand how the data is used.
+    <a href="{% url 'account_signup' %}">Create a free account</a> or <a href="{% url 'account_login' %}?next={% url 'datasets' %}">log in</a>.
+  </div>
+{% endif %}
+
+<div class="grid grid-2">
+  {% for d in datasets %}
+    <div class="card dataset">
+      <div>{% for t in d.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+      <h3>{{ d.title }}</h3>
+      <p>{{ d.description }}</p>
+      <div class="dataset-meta">
+        <span>Format: CSV</span><span>Frequency: {{ d.frequency }}</span><span>Columns: date, {{ d.series|join:", " }}</span>
+      </div>
+      <div style="margin-top:.6rem;">
+        {% if user.is_authenticated %}
+          <a class="btn btn-primary btn-sm" href="{% url 'dataset_download' d.slug %}">Download CSV</a>
+        {% else %}
+          <a class="btn btn-outline btn-sm" href="{% url 'account_login' %}?next={% url 'dataset_download' d.slug %}">Log in to download</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <h3>Using the data</h3>
+  <p class="muted" style="margin:0;">Datasets are provided for educational and non-commercial research use. Please cite “{{ SITE_NAME }}” and the access date. See our <a href="{% url 'methodology' %}">methodology</a> for sources and definitions, and the <a href="{% url 'terms' %}">terms of use</a> for details.</p>
+</div>
+{% endblock %}

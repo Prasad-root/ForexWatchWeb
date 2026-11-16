@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Exchange rates · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Exchange rates</div>
+  <h1>Bank exchange rates</h1>
+  <p>Compare today's buy and sell rates against the Sri Lankan rupee across banks. The best rate for each side is highlighted.</p>
+</div>
+
+<div class="toolbar">
+  <span class="muted">Currency:</span>
+  <div class="pills">
+    {% for c in currencies %}
+      <a class="pill{% if c.code == selected.code %} active{% endif %}" href="?currency={{ c.code }}">{{ c.flag }} {{ c.code }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid grid-3" style="margin-bottom:1.25rem;">
+  <div class="card"><div class="stat-label">{{ selected.name }} · best bank buying rate</div>
+    <div class="stat-value">{{ best_buy.buy }}</div><span class="muted">{{ best_buy.bank }}</span></div>
+  <div class="card"><div class="stat-label">{{ selected.name }} · best bank selling rate</div>
+    <div class="stat-value">{{ best_sell.sell }}</div><span class="muted">{{ best_sell.bank }}</span></div>
+  <div class="card"><div class="stat-label">Day change</div>
+    <div class="stat-value">{% include "partials/_change.html" with pct=selected.change %}</div><span class="muted">vs. previous day</span></div>
+</div>
+
+<div class="card card-flush" style="margin-bottom:1.5rem;">
+  <div class="card-head"><h3>{{ selected.flag }} {{ selected.code }} / LKR by bank</h3><span class="muted">LKR per 1 {{ selected.code }}</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Bank</th><th class="num">Buy</th><th class="num">Sell</th><th class="num">Spread</th><th class="num">Change</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td class="cell-title">{{ r.bank }}</td>
+          <td class="num{% if r.best_buy %} best{% endif %}">{{ r.buy }}</td>
+          <td class="num{% if r.best_sell %} best{% endif %}">{{ r.sell }}</td>
+          <td class="num muted">{{ r.spread }}</td>
+          <td class="num">{% include "partials/_change.html" with pct=r.change %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Currency converter</h3>
+    <p class="muted">Uses the selected bank's rate: buying rate when you sell {{ selected.code }}, selling rate when you buy it.</p>
+    <div class="converter">
+      <div class="form-field"><label for="amount">Amount</label><input id="amount" type="number" min="0" step="any" value="100"></div>
+      <div class="form-field"><label for="direction">Direction</label>
+        <select id="direction" style="width:100%">
+          <option value="to_lkr">{{ selected.code }} → LKR</option>
+          <option value="from_lkr">LKR → {{ selected.code }}</option>
+        </select></div>
+      <div class="form-field" style="grid-column:1/-1"><label for="bank">Bank</label>
+        <select id="bank" style="width:100%">{% for r in rows %}<option value="{{ forloop.counter0 }}">{{ r.bank }}</option>{% endfor %}</select></div>
+      <div class="result" id="result" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="card card-flush">
+    <div class="card-head"><h3>All currencies</h3><span class="muted">Market reference</span></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Currency</th><th class="num">Buy</th><th class="num">Sell</th></tr></thead>
+        <tbody>
+        {% for c in currencies %}
+          <tr><td><a href="?currency={{ c.code }}">{{ c.flag }} {{ c.code }}</a><span class="cell-sub">{{ c.name }}</span></td>
+              <td class="num">{{ c.buy }}</td><td class="num">{{ c.sell }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{{ rows|json_script:"rows-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var rows = JSON.parse(document.getElementById("rows-data").textContent);
+    var code = "{{ selected.code }}";
+    var amount = document.getElementById("amount"), dir = document.getElementById("direction"),
+        bank = document.getElementById("bank"), out = document.getElementById("result");
+    function fmt(n, d) { return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+    function update() {
+      var a = parseFloat(amount.value), row = rows[bank.value];
+      if (isNaN(a) || a < 0) { out.textContent = ""; return; }
+      out.textContent = dir.value === "to_lkr"
+        ? fmt(a, 2) + " " + code + " = " + fmt(a * row.buy, 2) + " LKR"
+        : fmt(a, 2) + " LKR = " + fmt(a / row.sell, 2) + " " + code;
+    }
+    [amount, dir, bank].forEach(function (el) { el.addEventListener("input", update); });
+    update();
+  })();
+</script>
+{% endblock %}

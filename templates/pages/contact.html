@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Contact · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Contact</div>
+  <h1>Contact us</h1>
+  <p>Found a wrong number, need data for a research project, or want to suggest a feature? Send us a note.</p>
+</div>
+
+<div class="card" style="max-width:640px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% include "partials/_form_field.html" with field=form.name %}
+    {% include "partials/_form_field.html" with field=form.email %}
+    {% include "partials/_form_field.html" with field=form.topic %}
+    {% include "partials/_form_field.html" with field=form.message %}
+    <div class="hp" aria-hidden="true">{{ form.website }}</div>
+    <button class="btn btn-primary" type="submit">Send message</button>
+  </form>
+</div>
+{% endblock %}

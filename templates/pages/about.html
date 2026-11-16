@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}About · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / About</div>
+  <h1>About {{ SITE_NAME }}</h1>
+</div>
+<div class="prose">
+  <p>{{ SITE_NAME }} brings Sri Lanka's everyday economic numbers into one clear, easy-to-read place: bank exchange rates, essential goods prices, fuel prices and the stock market.</p>
+  <h2>Our mission</h2>
+  <p>Good decisions start with good data. We make market information easy to find, easy to compare and easy to download, so households, businesses, students and researchers can all work from the same facts.</p>
+  <h2>What we offer</h2>
+  <ul>
+    <li>Daily bank buy and sell rates with the best rate highlighted.</li>
+    <li>Daily prices for essential goods and fuel.</li>
+    <li>CSE indices and leading share prices.</li>
+    <li>Historical analytics and free datasets for education.</li>
+  </ul>
+  <h2>Get in touch</h2>
+  <p>Questions, corrections or ideas? <a href="{% url 'contact' %}">Contact us</a>. Read how we collect and check our data on the <a href="{% url 'methodology' %}">methodology</a> page.</p>
+</div>
+{% endblock %}

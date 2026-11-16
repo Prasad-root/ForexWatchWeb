@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Sri Lanka market data</span>
+      <h1>Daily rates, prices and trends, <span>all in one place.</span></h1>
+      <p class="lead">Compare bank exchange rates, track fuel, goods and stock prices, explore years of history, and download free datasets for study and research.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="{% url 'rates' %}">View today's rates</a>
+        <a class="btn btn-outline btn-lg" href="{% url 'datasets' %}">Browse datasets</a>
+      </div>
+      <ul class="hero-points">
+        <li>Updated daily</li>
+        <li>10+ banks compared</li>
+        <li>Free for education</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="padding:0 0 .75rem;border:0;">
+        <div>
+          <div class="stat-label">USD / LKR · last 30 days</div>
+          <div class="stat-value">{{ snapshot.0.value|floatformat:2|intcomma }} <span class="stat-unit">LKR</span></div>
+        </div>
+        {% include "partials/_change.html" with pct=snapshot.0.change %}
+      </div>
+      <div class="chart-box sm"><canvas id="hero-chart" aria-label="USD to LKR, last 30 days" role="img"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- Snapshot -->
+<section class="section" style="padding-bottom:1rem;">
+  <div class="wrap">
+    <div class="grid grid-4">
+      {% for s in snapshot %}
+        <a class="card stat-card" href="{% url s.url_name %}">
+          <div class="stat-label">{{ s.label }}</div>
+          <div class="stat-value">{{ s.value|floatformat:s.decimals|intcomma }}<span class="stat-unit">{{ s.unit }}</span></div>
+          {% include "partials/_change.html" with pct=s.change %}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div><h2>Everything you need to follow the market</h2><p>Four live-style data hubs, plus the tools to go deeper.</p></div>
+    </div>
+    <div class="grid grid-3">
+      <a class="card feature" href="{% url 'rates' %}"><div class="icon">💱</div><h3>Bank exchange rates</h3><p>Buy and sell rates from every major bank side by side, with the best rate highlighted and a built-in converter.</p></a>
+      <a class="card feature" href="{% url 'commodities' %}"><div class="icon">🛒</div><h3>Goods market prices</h3><p>Daily prices for rice, vegetables, eggs and other essentials, with day-on-day change.</p></a>
+      <a class="card feature" href="{% url 'fuel' %}"><div class="icon">⛽</div><h3>Fuel prices</h3><p>Petrol, diesel and kerosene from CPC and Lanka IOC, plus the history of every price revision.</p></a>
+      <a class="card feature" href="{% url 'stocks' %}"><div class="icon">📈</div><h3>Stock market</h3><p>ASPI and S&amp;P SL20 indices with top gainers, losers and prices for leading CSE shares.</p></a>
+      <a class="card feature" href="{% url 'analytics' %}"><div class="icon">📊</div><h3>Historical analytics</h3><p>Pick any series and time range to see trends, highs, lows and moving averages.</p></a>
+      <a class="card feature" href="{% url 'datasets' %}"><div class="icon">🎓</div><h3>Datasets for education</h3><p>Clean CSV datasets for classrooms, coursework and research projects.</p></a>
+    </div>
+  </div>
+</section>
+
+<!-- Today's rates -->
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <div><h2>Today's USD rates</h2><p>Top banks, LKR per 1 US dollar.</p></div>
+      <a class="btn btn-outline btn-sm" href="{% url 'rates' %}">All banks and currencies →</a>
+    </div>
+    <div class="card card-flush table-wrap">
+      <table class="table">
+        <thead><tr><th>Bank</th><th class="num">Buy</th><th class="num">Sell</th><th class="num">Change</th></tr></thead>
+        <tbody>
+        {% for r in top_rates %}
+          <tr>
+            <td class="cell-title">{{ r.bank }}</td>
+            <td class="num{% if r.best_buy %} best{% endif %}">{{ r.buy|floatformat:2 }}</td>
+            <td class="num{% if r.best_sell %} best{% endif %}">{{ r.sell|floatformat:2 }}</td>
+            <td class="num">{% include "partials/_change.html" with pct=r.change %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Datasets -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div><h2>Open datasets for students and researchers</h2><p>One year of daily history, ready for Excel, Python or R.</p></div>
+      <a class="btn btn-outline btn-sm" href="{% url 'datasets' %}">All datasets →</a>
+    </div>
+    <div class="grid grid-3">
+      {% for d in datasets %}
+        <div class="card dataset">
+          <div>{% for t in d.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+          <h3>{{ d.title }}</h3>
+          <p>{{ d.description }}</p>
+          <div class="dataset-meta"><span>CSV</span><span>{{ d.frequency }}</span></div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="cta">
+      <div>
+        <h2>Create a free account</h2>
+        <p>Download datasets and keep your preferences. Sign up in seconds with Google or email.</p>
+      </div>
+      <div class="cta-actions">
+        {% if user.is_authenticated %}
+          <a class="btn btn-light btn-lg" href="{% url 'datasets' %}">Go to datasets</a>
+        {% else %}
+          <a class="btn btn-light btn-lg" href="{% url 'account_signup' %}">Sign up free</a>
+          <a class="btn btn-outline btn-lg" style="color:#fff;border-color:rgba(255,255,255,.5)" href="{% url 'account_login' %}">Log in</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ hero_chart|json_script:"hero-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+{% load static %}
+<script src="{% static 'js/fw-charts.js' %}"></script>
+<script>
+  (function () {
+    var d = JSON.parse(document.getElementById("hero-data").textContent);
+    fwLineChart(document.getElementById("hero-chart"), d.labels,
+      [{ label: "USD/LKR", data: d.values }], { fill: true, decimals: 2 });
+  })();
+</script>
+{% endblock %}

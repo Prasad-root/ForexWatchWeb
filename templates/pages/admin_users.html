@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Manage users · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'admin_dashboard' %}">Admin panel</a> / Users</div>
+  <h1>Manage users</h1>
+</div>
+
+<div class="card card-flush">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Role</th></tr></thead>
+      <tbody>
+      {% for u in users %}
+        <tr>
+          <td class="cell-title">{{ u.get_full_name|default:u.username }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.date_joined|date:"Y-m-d" }}</td>
+          <td>
+            {% if u == user or u.is_superuser %}
+              <span class="badge {% if u.is_app_admin %}badge-admin{% endif %}">{{ u.get_role_display }}</span>
+            {% else %}
+              <form class="inline" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ u.pk }}">
+                <select name="role" onchange="this.form.submit()" aria-label="Role for {{ u.email|default:u.username }}">
+                  <option value="user" {% if u.role == "user" %}selected{% endif %}>Normal user</option>
+                  <option value="admin" {% if u.role == "admin" %}selected{% endif %}>Admin</option>
+                </select>
+                <noscript><button class="btn btn-sm" type="submit">Save</button></noscript>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

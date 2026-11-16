@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% comment %}
+  Makes every built-in allauth page (password reset, email confirmation, logout, ...)
+  render inside the ForexWatch layout instead of the unstyled default.
+{% endcomment %}
+{% block title %}{% block head_title %}{% endblock %}{% endblock %}
+{% block main_class %}container-narrow auth-page{% endblock %}

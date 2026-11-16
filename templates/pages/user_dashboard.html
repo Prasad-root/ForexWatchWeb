@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}My account · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Welcome, {{ user.first_name|default:user.email|default:user.username }}</h1>
+  <p>You are signed in as a <strong>{{ user.get_role_display|lower }}</strong>. From here you can download datasets and jump to the data you follow.</p>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Download datasets</h3>
+    <ul class="list-plain">
+      {% for d in datasets %}
+        <li style="display:flex;justify-content:space-between;gap:1rem;align-items:center;">
+          <span>{{ d.title }}</span>
+          <a class="btn btn-outline btn-sm" href="{% url 'dataset_download' d.slug %}">CSV</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Quick links</h3>
+    <ul class="list-plain">
+      <li><a href="{% url 'rates' %}">Exchange rates</a></li>
+      <li><a href="{% url 'fuel' %}">Fuel prices</a></li>
+      <li><a href="{% url 'analytics' %}">Historical analytics</a></li>
+      <li><a href="{% url 'account_email' %}">Email addresses</a></li>
+      <li><a href="{% url 'account_change_password' %}">Change password</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Fuel prices · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Fuel prices</div>
+  <h1>Fuel prices</h1>
+  <p>Retail prices per litre from Ceylon Petroleum Corporation (CPC) and Lanka IOC. Last price revision: <strong>{{ revision_date|date:"j F Y" }}</strong>.</p>
+</div>
+
+<div class="card card-flush" style="margin-bottom:1.5rem;">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Product</th><th class="num">CPC (LKR/L)</th><th class="num">Lanka IOC (LKR/L)</th><th class="num">Last revision</th></tr></thead>
+      <tbody>
+      {% for p in prices %}
+        <tr>
+          <td class="cell-title">{{ p.product }}</td>
+          <td class="num">{{ p.cpc }}</td>
+          <td class="num">{{ p.ioc }}</td>
+          <td class="num">
+            {% if p.revision < 0 %}<span class="chg up">▼ Rs. {{ p.revision|cut:"-" }}</span>
+            {% elif p.revision > 0 %}<span class="chg down">▲ Rs. {{ p.revision }}</span>
+            {% else %}<span class="chg flat">No change</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head" style="padding:0 0 1rem;border:0;"><h3>Price history, last 12 months (CPC)</h3></div>
+  <div class="chart-box"><canvas id="fuel-chart" role="img" aria-label="Petrol 92 and Auto Diesel price history"></canvas></div>
+</div>
+
+{{ chart|json_script:"fuel-data" }}
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="{% static 'js/fw-charts.js' %}"></script>
+<script>
+  (function () {
+    var d = JSON.parse(document.getElementById("fuel-data").textContent);
+    fwLineChart(document.getElementById("fuel-chart"), d.labels, [
+      { label: "Petrol 92", data: d.petrol, stepped: true },
+      { label: "Auto Diesel", data: d.diesel, stepped: true }
+    ], { decimals: 0 });
+  })();
+</script>
+{% endblock %}

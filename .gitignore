@@ -1,0 +1,5 @@
+.venv/
+.env
+client_secret_729498781373-svsp30ec3gis6v49t938cbvkdv83cg46.apps.googleusercontent.com.json
+*.sqlite3
+

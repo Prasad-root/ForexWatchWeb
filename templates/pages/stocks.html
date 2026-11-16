@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Stock market · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Stock market</div>
+  <h1>Colombo Stock Exchange</h1>
+  <p>Index levels, the day's biggest movers and prices for leading listed companies.</p>
+</div>
+
+<div class="grid grid-2" style="margin-bottom:1.25rem;">
+  {% for i in indices %}
+    <div class="card">
+      <div class="stat-label">{{ i.name }} ({{ i.symbol }})</div>
+      <div class="stat-value">{{ i.value|floatformat:2|intcomma }}</div>
+      {% include "partials/_change.html" with pct=i.change %}
+    </div>
+  {% endfor %}
+</div>
+
+<div class="grid grid-2" style="margin-bottom:1.25rem;">
+  <div class="card card-flush">
+    <div class="card-head"><h3>Top gainers</h3></div>
+    <table class="table"><tbody>
+      {% for s in gainers %}<tr><td class="cell-title">{{ s.name }}<span class="cell-sub">{{ s.symbol }}</span></td><td class="num">{{ s.price|floatformat:2|intcomma }}</td><td class="num">{% include "partials/_change.html" with pct=s.change %}</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+  <div class="card card-flush">
+    <div class="card-head"><h3>Top losers</h3></div>
+    <table class="table"><tbody>
+      {% for s in losers %}<tr><td class="cell-title">{{ s.name }}<span class="cell-sub">{{ s.symbol }}</span></td><td class="num">{{ s.price|floatformat:2|intcomma }}</td><td class="num">{% include "partials/_change.html" with pct=s.change %}</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+</div>
+
+<div class="card card-flush">
+  <div class="card-head"><h3>Leading shares</h3><span class="muted">Prices in LKR</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Company</th><th class="num">Price</th><th class="num">Volume</th><th class="num">Change</th></tr></thead>
+      <tbody>
+      {% for s in stocks %}
+        <tr>
+          <td class="cell-title">{{ s.name }}<span class="cell-sub">{{ s.symbol }}</span></td>
+          <td class="num">{{ s.price|floatformat:2|intcomma }}</td>
+          <td class="num">{{ s.volume|intcomma }}</td>
+          <td class="num">{% include "partials/_change.html" with pct=s.change %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% url 'home' as home_url %}
+<header class="navbar">
+  <div class="wrap navbar-inner">
+    <a class="logo" href="{% url 'home' %}" aria-label="{{ SITE_NAME }} home">
+      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#1f5eff"/>
+        <path d="M6 22l7-7 4 4 9-10" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="26" cy="9" r="2.2" fill="#7fe0c3"/>
+      </svg>
+      <span>ForexWatch<em>.lk</em></span>
+    </a>
+
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle menu">
+    <label for="nav-toggle" class="nav-burger" aria-hidden="true"><span></span></label>
+
+    <nav class="nav-links" aria-label="Main">
+      <div class="dropdown">
+        <button type="button" class="nav-link dropdown-toggle" aria-haspopup="true">Markets ▾</button>
+        <div class="dropdown-menu">
+          <a href="{% url 'rates' %}"><strong>Exchange rates</strong><small>Daily bank buy/sell rates</small></a>
+          <a href="{% url 'commodities' %}"><strong>Commodities</strong><small>Daily goods market prices</small></a>
+          <a href="{% url 'fuel' %}"><strong>Fuel prices</strong><small>Petrol, diesel, kerosene</small></a>
+          <a href="{% url 'stocks' %}"><strong>Stock market</strong><small>CSE indices and shares</small></a>
+        </div>
+      </div>
+      <a class="nav-link" href="{% url 'analytics' %}">Analytics</a>
+      <a class="nav-link" href="{% url 'datasets' %}">Datasets</a>
+      <a class="nav-link" href="{% url 'methodology' %}">Methodology</a>
+      <a class="nav-link" href="{% url 'about' %}">About</a>
+
+      <div class="nav-auth">
+        {% if user.is_authenticated %}
+          <a class="nav-link" href="{% url 'dashboard' %}">
+            {{ user.first_name|default:user.email|default:user.username }}
+            {% if user.is_app_admin %}<span class="badge badge-admin">Admin</span>{% endif %}
+          </a>
+          <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <button class="btn btn-outline btn-sm" type="submit">Log out</button>
+          </form>
+        {% else %}
+          <a class="btn btn-ghost btn-sm" href="{% url 'account_login' %}">Log in</a>
+          <a class="btn btn-primary btn-sm" href="{% url 'account_signup' %}">Sign up free</a>
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+</header>

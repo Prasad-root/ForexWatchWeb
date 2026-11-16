@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Privacy policy · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Privacy policy</div>
+  <h1>Privacy policy</h1>
+</div>
+<div class="prose">
+  <div class="notice">Starter text only. Have it reviewed and adapted to your real data practices before launch. Google also requires a privacy policy URL to publish your sign-in app.</div>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Account data:</strong> your email address, and your name if you sign in with Google.</li>
+    <li><strong>Usage data:</strong> basic logs such as pages visited and datasets downloaded.</li>
+    <li><strong>Messages:</strong> anything you send through the contact form.</li>
+  </ul>
+
+  <h2>Signing in with Google</h2>
+  <p>If you choose Google sign-in, Google shares your name and email address with us. We do not receive your Google password and we do not access your Google files, contacts or other data.</p>
+
+  <h2>How we use it</h2>
+  <p>To run your account, let you download datasets, reply to your messages and keep the service secure. We do not sell your personal data.</p>
+
+  <h2>Your choices</h2>
+  <p>You can ask us to export or delete your account at any time through the <a href="{% url 'contact' %}">contact page</a>.</p>
+</div>
+{% endblock %}

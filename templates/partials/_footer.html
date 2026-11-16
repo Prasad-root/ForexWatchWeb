@@ -1,0 +1,31 @@
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div>
+      <a class="logo logo-footer" href="{% url 'home' %}">ForexWatch<em>.lk</em></a>
+      <p class="muted">Sri Lanka's daily market data and analytics: exchange rates, commodities, fuel and stocks, with free datasets for education.</p>
+    </div>
+    <div>
+      <h4>Markets</h4>
+      <a href="{% url 'rates' %}">Exchange rates</a>
+      <a href="{% url 'commodities' %}">Commodity prices</a>
+      <a href="{% url 'fuel' %}">Fuel prices</a>
+      <a href="{% url 'stocks' %}">Stock market</a>
+    </div>
+    <div>
+      <h4>Resources</h4>
+      <a href="{% url 'analytics' %}">Historical analytics</a>
+      <a href="{% url 'datasets' %}">Download datasets</a>
+      <a href="{% url 'methodology' %}">Methodology &amp; sources</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="{% url 'about' %}">About us</a>
+      <a href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'privacy' %}">Privacy policy</a>
+      <a href="{% url 'terms' %}">Terms of use</a>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>&copy; {% now "Y" %} {{ SITE_NAME }}. Data is provided for information and education only and is not financial advice.</span>
+  </div>
+</footer>

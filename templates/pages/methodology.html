@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Methodology & sources · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Methodology</div>
+  <h1>Methodology &amp; data sources</h1>
+  <p>How the numbers on {{ SITE_NAME }} are collected, checked and published.</p>
+</div>
+<div class="prose">
+  <div class="notice">Replace the placeholders below with your real sources and update times before launch. Credibility pages like this one matter a lot for a data site.</div>
+
+  <h2>Exchange rates</h2>
+  <p><strong>Source:</strong> published buy and sell rate sheets of licensed commercial banks. <strong>Update time:</strong> once each business day. <strong>Definition:</strong> rates are LKR per one unit of foreign currency (per 100 for JPY).</p>
+
+  <h2>Commodity prices</h2>
+  <p><strong>Source:</strong> daily retail market price reports. <strong>Definition:</strong> average retail price in LKR per the stated unit.</p>
+
+  <h2>Fuel prices</h2>
+  <p><strong>Source:</strong> official price announcements from Ceylon Petroleum Corporation and Lanka IOC. Prices change on revision dates and stay the same in between.</p>
+
+  <h2>Stock market</h2>
+  <p><strong>Source:</strong> Colombo Stock Exchange end-of-day data. Index values and share prices are closing values.</p>
+
+  <h2>Quality checks</h2>
+  <ul>
+    <li>Values outside an expected range are flagged for review before publishing.</li>
+    <li>Missing days are left blank, never estimated.</li>
+    <li>Corrections are published with a note. Report an error through the <a href="{% url 'contact' %}">contact page</a>.</li>
+  </ul>
+
+  <h2>Disclaimer</h2>
+  <p>Information is provided for general and educational purposes only. It is not financial advice. Check rates with your bank before transacting.</p>
+</div>
+{% endblock %}

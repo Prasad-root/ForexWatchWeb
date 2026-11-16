@@ -1,0 +1,38 @@
+{% load static %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      {% block title %}{{ SITE_NAME }} · Sri Lanka market data &
+      analytics{%endblock %}
+    </title>
+    <meta
+      name="description"
+      content="{% block meta_description %}Daily bank exchange rates, commodity prices, fuel prices and stock market data for Sri Lanka, with historical analytics and free datasets for education.{% endblock %}"
+    />
+    <link rel="stylesheet" href="{% static 'css/forexwatch.css' %}" />
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <!-- {% if DEMO_DATA %}
+    <div class="demo-banner">Demo data: figures on this site are sample values for design purposes, not live market prices.</div>
+  {% endif %} -->
+
+    {% include "partials/_navbar.html" %} {% if messages %}
+    <div class="wrap">
+      <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <main class="{% block main_class %}wrap{% endblock %}">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% include "partials/_footer.html" %} {% block extra_js %}{% endblock %}
+  </body>
+</html>
