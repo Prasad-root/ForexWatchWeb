@@ -7,4 +7,5 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),  # Django's built-in admin (staff only)
     path("accounts/", include("allauth.urls")),  # login, signup, Google OAuth, logout, password reset
     path("", include("pages.urls")),
+    path("rates/", include("bankrates.urls")),  # Bank rates
 ]
