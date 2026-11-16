@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     # Project apps
     "accounts",
     "pages",
+    "bankrates",
 ]
 
 MIDDLEWARE = [
@@ -84,7 +85,17 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-    }
+    },
+    "forex_data": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("FOREX_DB_NAME", "forex_data"),
+        "USER": os.getenv("FOREX_DB_USER", "postgres"),
+        "PASSWORD": os.getenv("FOREX_DB_PASSWORD", ""),
+        "HOST": os.getenv("FOREX_DB_HOST", "localhost"),
+        "PORT": os.getenv("FOREX_DB_PORT", "5432"),
+        "CONN_MAX_AGE": 60,
+        "OPTIONS": {"options": "-c default_transaction_read_only=on"}
+    },
 }
 
 AUTH_PASSWORD_VALIDATORS = [
