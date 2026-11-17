@@ -13,15 +13,19 @@ from .forms import ContactForm
 
 # --- Public pages --------------------------------------------------------------
 
+import logging
+from bankrates import rates_service
+
+log = logging.getLogger(__name__)
+
+
 def home(request):
-    dates, values = data.history("usd_lkr")
-    context = {
-        "snapshot": data.snapshot(),
-        "top_rates": data.bank_rates("USD")[:5],
-        "hero_chart": {"labels": dates[-30:], "values": values[-30:]},
-        "datasets": data.DATASETS[:3],
-    }
-    return render(request, "pages/home.html", context)
+    try:
+        bank = rates_service.home_summary()
+    except Exception:
+        log.exception("Home bank-rate summary failed")
+        bank = None
+    return render(request, "pages/home.html", {"bank": bank})
 
 
 def rates(request):

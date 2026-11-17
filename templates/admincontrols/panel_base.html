@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .cp-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:1.5rem;align-items:start}
+  .cp-side{position:sticky;top:1rem}
+  .cp-group{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:.6;margin:1.1rem 0 .35rem}
+  .cp-group:first-child{margin-top:0}
+  .cp-link{display:flex;justify-content:space-between;align-items:center;padding:.5rem .7rem;border-radius:8px;text-decoration:none;color:inherit}
+  .cp-link:hover{background:rgba(128,128,128,.1)}
+  .cp-link.active{background:rgba(128,128,128,.18);font-weight:700}
+  .cp-soon{font-size:.65rem;padding:.1rem .4rem;border-radius:999px;border:1px solid rgba(128,128,128,.5);opacity:.7}
+  .cp-sec{display:flex;justify-content:space-between;align-items:baseline;margin:1.75rem 0 .75rem;gap:1rem;flex-wrap:wrap}
+  .cp-sec h2{margin:0;font-size:1.15rem}
+  @media (max-width:800px){.cp-layout{grid-template-columns:1fr}.cp-side{position:static}}
+</style>
+<div class="cp-layout">
+  <aside class="cp-side">
+    {% for g in nav_groups %}
+      <div class="cp-group">{{ g.title }}</div>
+      {% for i in g.items %}
+        <a class="cp-link{% if i.key == active %} active{% endif %}" href="{% url i.url %}">{{ i.label }}{% if i.soon %}<span class="cp-soon">soon</span>{% endif %}</a>
+      {% endfor %}
+    {% endfor %}
+  </aside>
+  <section class="cp-main">{% block panel %}{% endblock %}</section>
+</div>
+{% endblock %}
+
+{% block extra_js %}{% block panel_js %}{% endblock %}{% endblock %}

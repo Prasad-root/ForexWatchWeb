@@ -1,98 +1,560 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Historical analytics · {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+  /* Base Variables & Expanded Layout Matching About, Contact & Datasets Pages */
+  .analytics-wrapper {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --emerald: #10b981;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 2rem 4rem;
+    box-sizing: border-box;
+    color: var(--text-main);
+  }
+
+  /* Scroll Reveal Animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+
+  /* Coming Soon Hero Banner */
+  .coming-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 3rem;
+    align-items: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 60%, #fefce8 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3.25rem 3rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--amber-soft);
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    margin-bottom: 1.1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pulse-amber {
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    animation: pulseAmber 2s infinite;
+  }
+  @keyframes pulseAmber {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65); }
+    70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  }
+  .coming-hero h1 {
+    font-size: 2.35rem;
+    line-height: 1.2;
+    margin: 0 0 0.9rem;
+    color: var(--primary);
+  }
+  .coming-hero p {
+    font-size: 1.06rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin: 0 0 1.75rem;
+    max-width: 740px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: #ffffff;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffffff;
+    color: var(--primary);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  /* Animated SVG Chart Illustration */
+  .hero-graphic {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .floating-svg {
+    width: 100%;
+    max-width: 310px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-9px); }
+  }
+  .chart-line-draw {
+    stroke-dasharray: 260;
+    stroke-dashoffset: 260;
+    animation: drawLine 2.4s ease-out forwards;
+  }
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Interactive Chart Sandbox Preview Card */
+  .preview-sandbox {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2.25rem 2.5rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 12px 30px -12px rgba(15, 23, 42, 0.06);
+    position: relative;
+  }
+  .sandbox-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .sandbox-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+  .mock-select {
+    padding: 0.55rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: #f8fafc;
+    cursor: pointer;
+  }
+  .pills-group {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 10px;
+    gap: 0.25rem;
+  }
+  .range-pill {
+    border: none;
+    background: transparent;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .range-pill.active {
+    background: #ffffff;
+    color: var(--accent);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  }
+  .preview-tag {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  /* Interactive Visual Mock Chart Stage */
+  .mock-chart-stage {
+    position: relative;
+    height: 250px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+  .chart-overlay-notice {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(6px);
+    color: #ffffff;
+    padding: 1rem 1.75rem;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+    z-index: 2;
+    max-width: 90%;
+  }
+  .chart-overlay-notice strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: #38bdf8;
+  }
+  .chart-overlay-notice span {
+    font-size: 0.88rem;
+    color: #e2e8f0;
+  }
+
+  /* Summary Metric Row */
+  .stat-preview-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+  }
+  .stat-box {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+  }
+  .stat-box span {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+  .stat-box strong {
+    font-size: 1.15rem;
+    color: var(--primary);
+  }
+
+  /* Upcoming Features Grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -12px rgba(15, 23, 42, 0.08);
+  }
+  .icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .feature-card h3 {
+    font-size: 1.12rem;
+    margin: 0 0 0.5rem;
+    color: var(--primary);
+  }
+  .feature-card p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Bottom Developer & Datasets Banner */
+  .bottom-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 18px;
+    padding: 2.5rem 2.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .bottom-banner h3 {
+    font-size: 1.35rem;
+    margin: 0 0 0.45rem;
+    color: #ffffff;
+  }
+  .bottom-banner p {
+    margin: 0;
+    color: #cbd5e1;
+    max-width: 760px;
+    line-height: 1.65;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 960px) {
+    .stat-preview-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 768px) {
+    .analytics-wrapper {
+      padding: 1rem 1rem 3rem;
+    }
+    .coming-hero {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .hero-actions {
+      justify-content: center;
+    }
+    .hero-graphic {
+      justify-content: center;
+    }
+    .preview-sandbox,
+    .bottom-banner {
+      padding: 1.75rem 1.35rem;
+    }
+  }
+</style>
+
 <div class="page-head">
   <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Analytics</div>
-  <h1>Historical analytics</h1>
-  <p>Choose a series and a time range to explore trends. Statistics update with your selection.</p>
 </div>
 
-<div class="card">
-  <div class="toolbar">
-    <label for="series" class="muted">Series</label>
-    <select id="series">
-      {% for group, items in groups.items %}
-        <optgroup label="{{ group }}">
-          {% for key, label in items %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
-        </optgroup>
-      {% endfor %}
-    </select>
-    <div class="pills" id="ranges" role="group" aria-label="Time range">
-      <button type="button" class="pill" data-days="30">1M</button>
-      <button type="button" class="pill" data-days="90">3M</button>
-      <button type="button" class="pill" data-days="180">6M</button>
-      <button type="button" class="pill active" data-days="365">1Y</button>
+<div class="analytics-wrapper">
+  <!-- Coming Soon Hero Banner -->
+  <section class="coming-hero reveal">
+    <div>
+      <span class="status-badge"><span class="pulse-amber"></span> Coming Soon · In Active Development</span>
+      <h1>Historical Analytics</h1>
+      <p>We are building interactive multi-series charts, 7-day moving averages, and range statistics for Sri Lanka's bank exchange rates, essential goods, fuel prices, and CSE indices. Explore the interactive UI preview below while our historical data pipelines finish syncing.</p>
+      <div class="hero-actions">
+        <a href="{% url 'home' %}" class="btn-primary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          View Today's Live Rates
+        </a>
+        <a href="{% url 'contact' %}" class="btn-secondary">Suggest an Indicator</a>
+      </div>
     </div>
-    <label class="check"><input type="checkbox" id="ma"> 7-day average</label>
-  </div>
 
-  <div class="chart-box"><canvas id="main-chart" role="img" aria-label="Historical chart"></canvas></div>
+    <!-- Custom Animated Trend Chart Illustration -->
+    <div class="hero-graphic">
+      <svg class="floating-svg" viewBox="0 0 310 230" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Historical Analytics Coming Soon Illustration">
+        <rect x="24" y="24" width="262" height="182" rx="18" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+        <!-- Grid Lines -->
+        <line x1="48" y1="68" x2="262" y2="68" stroke="#F1F5F9" stroke-width="2"/>
+        <line x1="48" y1="108" x2="262" y2="108" stroke="#F1F5F9" stroke-width="2"/>
+        <line x1="48" y1="148" x2="262" y2="148" stroke="#F1F5F9" stroke-width="2"/>
+        <!-- Animated Trend Curve -->
+        <path class="chart-line-draw" d="M52 152 L96 130 L138 138 L180 96 L222 106 L258 66" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Moving Average Dashed Line -->
+        <path d="M52 158 L96 142 L138 136 L180 112 L222 102 L258 82" stroke="#10B981" stroke-width="2.5" stroke-dasharray="5 5" stroke-linecap="round"/>
+        <!-- Data Points -->
+        <circle cx="96" cy="130" r="4.5" fill="#2563EB"/>
+        <circle cx="180" cy="96" r="4.5" fill="#2563EB"/>
+        <circle cx="258" cy="66" r="5.5" fill="#10B981"/>
+      </svg>
+    </div>
+  </section>
 
-  <div class="stat-row">
-    <div><span>Latest</span><strong id="s-latest">-</strong></div>
-    <div><span>Change over range</span><strong id="s-change">-</strong></div>
-    <div><span>High</span><strong id="s-high">-</strong></div>
-    <div><span>Low</span><strong id="s-low">-</strong></div>
-    <div><span>Average</span><strong id="s-avg">-</strong></div>
-  </div>
+  <!-- Interactive UI Sandbox Preview -->
+  <section class="preview-sandbox reveal delay-1">
+    <div class="sandbox-top">
+      <div class="sandbox-controls">
+        <select class="mock-select" id="previewSeriesSelect" aria-label="Preview economic series">
+          <option value="usd">USD / LKR Commercial Selling Rate</option>
+          <option value="aspi">CSE All Share Price Index (ASPI)</option>
+          <option value="fuel">Lanka Petrol 92 Octane (LKR/L)</option>
+          <option value="rice">Nadu Rice Retail Average (LKR/kg)</option>
+        </select>
+
+        <div class="pills-group" id="previewRanges" role="group" aria-label="Preview time range">
+          <button type="button" class="range-pill" data-range="1M">1M</button>
+          <button type="button" class="range-pill" data-range="3M">3M</button>
+          <button type="button" class="range-pill" data-range="6M">6M</button>
+          <button type="button" class="range-pill active" data-range="1Y">1Y</button>
+        </div>
+      </div>
+
+      <span class="preview-tag">Interactive Interface Preview</span>
+    </div>
+
+    <!-- Visual Chart Stage with Coming Soon Overlay -->
+    <div class="mock-chart-stage">
+      <div class="chart-overlay-notice">
+        <strong>Historical Engine Syncing</strong>
+        <span>Full 1M–1Y interactive trend charts and 7-day moving averages will unlock shortly.</span>
+      </div>
+
+      <svg width="100%" height="170" viewBox="0 0 900 170" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="previewArea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2563EB" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+        <path id="previewFillPath" d="M0,130 Q150,95 300,110 T600,65 T900,45 L900,170 L0,170 Z" fill="url(#previewArea)"/>
+        <path id="previewStrokePath" d="M0,130 Q150,95 300,110 T600,65 T900,45" fill="none" stroke="#2563EB" stroke-width="3"/>
+      </svg>
+    </div>
+
+    <!-- Preview Stat Row -->
+    <div class="stat-preview-row">
+      <div class="stat-box"><span>Latest</span><strong>Syncing...</strong></div>
+      <div class="stat-box"><span>Change over range</span><strong>Pending</strong></div>
+      <div class="stat-box"><span>Range High</span><strong>—</strong></div>
+      <div class="stat-box"><span>Range Low</span><strong>—</strong></div>
+      <div class="stat-box"><span>Period Average</span><strong>—</strong></div>
+    </div>
+  </section>
+
+  <!-- What's Launching in Historical Analytics -->
+  <section class="features-grid reveal delay-2">
+    <div class="feature-card">
+      <div class="icon-box">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <h3>7-Day Moving Averages</h3>
+      <p>Smooth out short-term daily noise across currency spreads and retail food prices with toggleable trend overlays.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon-box">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h3>Flexible 1M to 1Y Windows</h3>
+      <p>Switch seamlessly between 30-day, 90-day, 6-month, and full-year horizons with instant high, low, and percentage change summaries.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon-box">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <h3>Direct CSV Pairing</h3>
+      <p>Every chart series connects directly to our upcoming <a href="{% url 'datasets' %}" style="color: var(--accent); font-weight: 600;">Datasets</a> portal so you can export the exact numbers behind each graph.</p>
+    </div>
+  </section>
+
+  <!-- Bottom Banner -->
+  <section class="bottom-banner reveal">
+    <div>
+      <h3>Engineered by Antler IT Solutions</h3>
+      <p>Our historical analytics engine is actively being calibrated to ensure clean, gap-free economic time series for Sri Lankan households, analysts, and students.</p>
+    </div>
+    <a href="{% url 'datasets' %}" class="btn-primary">View Datasets Roadmap &rarr;</a>
+  </section>
 </div>
 
-<p class="muted" style="margin-top:1rem;">Need the raw numbers? <a href="{% url 'datasets' %}">Download the datasets</a>.</p>
-
-{{ series|json_script:"series-data" }}
-{% endblock %}
-
-{% block extra_js %}
-{% load static %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script src="{% static 'js/fw-charts.js' %}"></script>
 <script>
-  (function () {
-    var all = JSON.parse(document.getElementById("series-data").textContent);
-    var select = document.getElementById("series"), ma = document.getElementById("ma");
-    var ranges = document.querySelectorAll("#ranges .pill");
-    var days = 365, chart = null;
-
-    function fmt(n, d) { return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
-    function movingAverage(values, window) {
-      return values.map(function (_, i) {
-        var from = Math.max(0, i - window + 1), slice = values.slice(from, i + 1);
-        return slice.reduce(function (a, b) { return a + b; }, 0) / slice.length;
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. Scroll-Reveal Observer
+    const revealElements = document.querySelectorAll(".reveal");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+          revealObserver.unobserve(entry.target);
+        }
       });
+    }, { threshold: 0.1 });
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+
+    // 2. Interactive Preview Controls (Visual Wave Shift)
+    const curves = {
+      usd: "M0,130 Q150,95 300,110 T600,65 T900,45",
+      aspi: "M0,145 Q180,120 320,85 T620,75 T900,35",
+      fuel: "M0,110 L250,110 L260,80 L580,80 L590,95 L900,95",
+      rice: "M0,125 Q200,135 400,100 T700,85 T900,70"
+    };
+
+    const select = document.getElementById("previewSeriesSelect");
+    const strokePath = document.getElementById("previewStrokePath");
+    const fillPath = document.getElementById("previewFillPath");
+    const pills = document.querySelectorAll("#previewRanges .range-pill");
+
+    function updatePreviewWave() {
+      const d = curves[select.value] || curves.usd;
+      strokePath.setAttribute("d", d);
+      fillPath.setAttribute("d", d + " L900,170 L0,170 Z");
     }
 
-    function render() {
-      var s = all[select.value], d = s.decimals;
-      var labels = s.dates.slice(-days), values = s.values.slice(-days);
-      var datasets = [{ label: s.label, data: values }];
-      if (ma.checked) {
-        datasets.push({ label: "7-day average", data: movingAverage(s.values, 7).slice(-days), borderDash: [6, 4] });
-      }
-      if (chart) { chart.destroy(); }
-      chart = fwLineChart(document.getElementById("main-chart"), labels, datasets, { fill: true, decimals: d });
-
-      var first = values[0], last = values[values.length - 1];
-      var change = (last / first - 1) * 100;
-      var sum = values.reduce(function (a, b) { return a + b; }, 0);
-      document.getElementById("s-latest").textContent = fmt(last, d) + " " + s.unit;
-      document.getElementById("s-change").textContent = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
-      document.getElementById("s-high").textContent = fmt(Math.max.apply(null, values), d);
-      document.getElementById("s-low").textContent = fmt(Math.min.apply(null, values), d);
-      document.getElementById("s-avg").textContent = fmt(sum / values.length, d);
-    }
-
-    select.addEventListener("change", render);
-    ma.addEventListener("change", render);
-    ranges.forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        ranges.forEach(function (b) { b.classList.remove("active"); });
-        btn.classList.add("active");
-        days = parseInt(btn.dataset.days, 10);
-        render();
+    if (select) select.addEventListener("change", updatePreviewWave);
+    pills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        pills.forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
       });
     });
-    render();
-  })();
+  });
 </script>
 {% endblock %}

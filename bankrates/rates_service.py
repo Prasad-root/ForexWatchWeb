@@ -120,3 +120,49 @@ def build_payload(sel_date=None, currency=None, basis=None, days=None):
         "analysis": analysis,
         "period": {"start": hist["start"], "end": hist["end"]},
     }
+
+
+def home_summary():
+    """Compact USD/LKR (TT) summary for the home page. Cached for 5 minutes."""
+    def build():
+        p = build_payload()               # defaults: latest date, USD, TT, 30 days
+        rows = p["rows"]
+        if not [r for r in rows if r["buy"] is not None]:
+            return None
+
+        # Headline = average buying rate across banks. The change compares like with like
+        # (only banks that have both today's and the previous rate).
+        buys = [r["buy"] for r in rows if r["buy"] is not None]
+        like = [r for r in rows if r["buy"] is not None and r["change"] is not None]
+        change_pct = None
+        if like:
+            now = sum(r["buy"] for r in like) / len(like)
+            prev = sum(r["buy"] - r["change"] for r in like) / len(like)
+            change_pct = (now - prev) / prev * 100 if prev else None
+
+        # Chart = daily average buying rate, actual days only (no projection).
+        actual = [d for d in p["trend"]["datasets"] if not d["dashed"]]
+        n = len(p["trend"]["labels"]) - q.FORECAST_DAYS
+        labels, values = [], []
+        for i in range(n):
+            day = [d["data"][i] for d in actual if d["data"][i] is not None]
+            if day:
+                labels.append(p["trend"]["labels"][i])
+                values.append(round(sum(day) / len(day), 4))
+
+        return {
+            "date": date.fromisoformat(p["filters"]["date"]),
+            "currency": p["filters"]["currency"],
+            "value": sum(buys) / len(buys),
+            "change_pct": change_pct,
+            "bank_count": len(rows),
+            "top_rates": rows[:5],
+            "chart": {"labels": labels, "values": values},
+        }
+
+    return cache.get_or_set("forex:home", build, 300)
+
+
+def invalidate_cache():
+    """Drop cached rates data (call after the underlying data changes)."""
+    cache.delete_many(["forex:meta", "forex:home"])

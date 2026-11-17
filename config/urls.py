@@ -8,4 +8,5 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),  # login, signup, Google OAuth, logout, password reset
     path("", include("pages.urls")),
     path("rates/", include("bankrates.urls")),  # Bank rates
+    path("admin-panel/", include("admincontrols.urls"))
 ]

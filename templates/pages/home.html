@@ -3,6 +3,13 @@
 {% block main_class %}{% endblock %}
 
 {% block content %}
+<style>
+  .soon-tag{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.02em;padding:.1rem .55rem;border-radius:999px;border:1px solid rgba(128,128,128,.5);opacity:.8;margin-left:.4rem;vertical-align:middle;white-space:nowrap}
+  .soon-card{opacity:.75}
+  .soon-card .stat-value{opacity:.4}
+  .soon-box{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;opacity:.6}
+</style>
+
 <!-- Hero -->
 <section class="hero">
   <div class="wrap hero-grid">
@@ -16,20 +23,26 @@
       </div>
       <ul class="hero-points">
         <li>Updated daily</li>
-        <li>10+ banks compared</li>
+        <li>{% if bank %}{{ bank.bank_count }} bank{{ bank.bank_count|pluralize }} compared{% else %}Bank rates compared{% endif %}</li>
         <li>Free for education</li>
       </ul>
     </div>
 
     <div class="card">
-      <div class="card-head" style="padding:0 0 .75rem;border:0;">
-        <div>
-          <div class="stat-label">USD / LKR · last 30 days</div>
-          <div class="stat-value">{{ snapshot.0.value|floatformat:2|intcomma }} <span class="stat-unit">LKR</span></div>
+      {% if bank %}
+        <div class="card-head" style="padding:0 0 .75rem;border:0;">
+          <div>
+            <div class="stat-label">{{ bank.currency }} / LKR · avg. bank buying rate · last 30 days</div>
+            <div class="stat-value">{{ bank.value|floatformat:2|intcomma }} <span class="stat-unit">LKR</span></div>
+          </div>
+          {% if bank.change_pct is not None %}{% include "partials/_change.html" with pct=bank.change_pct %}{% endif %}
         </div>
-        {% include "partials/_change.html" with pct=snapshot.0.change %}
-      </div>
-      <div class="chart-box sm"><canvas id="hero-chart" aria-label="USD to LKR, last 30 days" role="img"></canvas></div>
+        <div class="chart-box sm"><canvas id="hero-chart" aria-label="{{ bank.currency }} to LKR, last 30 days" role="img"></canvas></div>
+        <div class="muted" style="font-size:.8rem;margin-top:.5rem">As at {{ bank.date|date:"d M Y" }}</div>
+      {% else %}
+        <div class="stat-label">USD / LKR · last 30 days</div>
+        <div class="soon-box">Rates are temporarily unavailable.</div>
+      {% endif %}
     </div>
   </div>
 </section>
@@ -38,13 +51,18 @@
 <section class="section" style="padding-bottom:1rem;">
   <div class="wrap">
     <div class="grid grid-4">
-      {% for s in snapshot %}
-        <a class="card stat-card" href="{% url s.url_name %}">
-          <div class="stat-label">{{ s.label }}</div>
-          <div class="stat-value">{{ s.value|floatformat:s.decimals|intcomma }}<span class="stat-unit">{{ s.unit }}</span></div>
-          {% include "partials/_change.html" with pct=s.change %}
+      {% if bank %}
+        <a class="card stat-card" href="{% url 'rates' %}">
+          <div class="stat-label">USD / LKR</div>
+          <div class="stat-value">{{ bank.value|floatformat:2|intcomma }}<span class="stat-unit">LKR</span></div>
+          {% if bank.change_pct is not None %}{% include "partials/_change.html" with pct=bank.change_pct %}{% endif %}
         </a>
-      {% endfor %}
+      {% else %}
+        <a class="card stat-card soon-card" href="{% url 'rates' %}"><div class="stat-label">USD / LKR</div><div class="stat-value">—</div></a>
+      {% endif %}
+      <div class="card stat-card soon-card"><div class="stat-label">Fuel prices <span class="soon-tag">Coming soon</span></div><div class="stat-value">—</div></div>
+      <div class="card stat-card soon-card"><div class="stat-label">Goods prices <span class="soon-tag">Coming soon</span></div><div class="stat-value">—</div></div>
+      <div class="card stat-card soon-card"><div class="stat-label">Stock market <span class="soon-tag">Coming soon</span></div><div class="stat-value">—</div></div>
     </div>
   </div>
 </section>
@@ -53,15 +71,15 @@
 <section class="section">
   <div class="wrap">
     <div class="section-head">
-      <div><h2>Everything you need to follow the market</h2><p>Four live-style data hubs, plus the tools to go deeper.</p></div>
+      <div><h2>Everything you need to follow the market</h2><p>Bank exchange rates are live. More data hubs are on the way.</p></div>
     </div>
     <div class="grid grid-3">
-      <a class="card feature" href="{% url 'rates' %}"><div class="icon">💱</div><h3>Bank exchange rates</h3><p>Buy and sell rates from every major bank side by side, with the best rate highlighted and a built-in converter.</p></a>
-      <a class="card feature" href="{% url 'commodities' %}"><div class="icon">🛒</div><h3>Goods market prices</h3><p>Daily prices for rice, vegetables, eggs and other essentials, with day-on-day change.</p></a>
-      <a class="card feature" href="{% url 'fuel' %}"><div class="icon">⛽</div><h3>Fuel prices</h3><p>Petrol, diesel and kerosene from CPC and Lanka IOC, plus the history of every price revision.</p></a>
-      <a class="card feature" href="{% url 'stocks' %}"><div class="icon">📈</div><h3>Stock market</h3><p>ASPI and S&amp;P SL20 indices with top gainers, losers and prices for leading CSE shares.</p></a>
-      <a class="card feature" href="{% url 'analytics' %}"><div class="icon">📊</div><h3>Historical analytics</h3><p>Pick any series and time range to see trends, highs, lows and moving averages.</p></a>
-      <a class="card feature" href="{% url 'datasets' %}"><div class="icon">🎓</div><h3>Datasets for education</h3><p>Clean CSV datasets for classrooms, coursework and research projects.</p></a>
+      <a class="card feature" href="{% url 'rates' %}"><div class="icon">💱</div><h3>Bank exchange rates</h3><p>Buy and sell rates from every major bank side by side, with the best rate highlighted, trends, a 7-day projection and a built-in converter.</p></a>
+      <a class="card feature" href="{% url 'commodities' %}"><div class="icon">🛒</div><h3>Goods market prices <span class="soon-tag">Coming soon</span></h3><p>Daily prices for rice, vegetables, eggs and other essentials, with day-on-day change.</p></a>
+      <a class="card feature" href="{% url 'fuel' %}"><div class="icon">⛽</div><h3>Fuel prices <span class="soon-tag">Coming soon</span></h3><p>Petrol, diesel and kerosene from CPC and Lanka IOC, plus the history of every price revision.</p></a>
+      <a class="card feature" href="{% url 'stocks' %}"><div class="icon">📈</div><h3>Stock market <span class="soon-tag">Coming soon</span></h3><p>ASPI and S&amp;P SL20 indices with top gainers, losers and prices for leading CSE shares.</p></a>
+      <a class="card feature" href="{% url 'analytics' %}"><div class="icon">📊</div><h3>Historical analytics <span class="soon-tag">Coming soon</span></h3><p>Pick any series and time range to see trends, highs, lows and moving averages.</p></a>
+      <a class="card feature" href="{% url 'datasets' %}"><div class="icon">🎓</div><h3>Datasets for education <span class="soon-tag">Coming soon</span></h3><p>Clean CSV datasets for classrooms, coursework and research projects.</p></a>
     </div>
   </div>
 </section>
@@ -70,20 +88,22 @@
 <section class="section section-alt">
   <div class="wrap">
     <div class="section-head">
-      <div><h2>Today's USD rates</h2><p>Top banks, LKR per 1 US dollar.</p></div>
+      <div><h2>Today's USD rates</h2><p>Top banks by buying rate, LKR per 1 US dollar{% if bank %} · as at {{ bank.date|date:"d M Y" }}{% endif %}.</p></div>
       <a class="btn btn-outline btn-sm" href="{% url 'rates' %}">All banks and currencies →</a>
     </div>
     <div class="card card-flush table-wrap">
       <table class="table">
         <thead><tr><th>Bank</th><th class="num">Buy</th><th class="num">Sell</th><th class="num">Change</th></tr></thead>
         <tbody>
-        {% for r in top_rates %}
+        {% for r in bank.top_rates %}
           <tr>
             <td class="cell-title">{{ r.bank }}</td>
-            <td class="num{% if r.best_buy %} best{% endif %}">{{ r.buy|floatformat:2 }}</td>
-            <td class="num{% if r.best_sell %} best{% endif %}">{{ r.sell|floatformat:2 }}</td>
-            <td class="num">{% include "partials/_change.html" with pct=r.change %}</td>
+            <td class="num{% if r.is_best_buy %} best{% endif %}">{{ r.buy|floatformat:2 }}</td>
+            <td class="num{% if r.is_best_sell %} best{% endif %}">{{ r.sell|floatformat:2 }}</td>
+            <td class="num">{% if r.change_pct is not None %}{% include "partials/_change.html" with pct=r.change_pct %}{% else %}<span class="muted">—</span>{% endif %}</td>
           </tr>
+        {% empty %}
+          <tr><td colspan="4" class="muted">No rates available right now.</td></tr>
         {% endfor %}
         </tbody>
       </table>
@@ -95,18 +115,12 @@
 <section class="section">
   <div class="wrap">
     <div class="section-head">
-      <div><h2>Open datasets for students and researchers</h2><p>One year of daily history, ready for Excel, Python or R.</p></div>
-      <a class="btn btn-outline btn-sm" href="{% url 'datasets' %}">All datasets →</a>
+      <div><h2>Open datasets for students and researchers <span class="soon-tag">Coming soon</span></h2><p>Daily history, ready for Excel, Python or R.</p></div>
     </div>
     <div class="grid grid-3">
-      {% for d in datasets %}
-        <div class="card dataset">
-          <div>{% for t in d.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
-          <h3>{{ d.title }}</h3>
-          <p>{{ d.description }}</p>
-          <div class="dataset-meta"><span>CSV</span><span>{{ d.frequency }}</span></div>
-        </div>
-      {% endfor %}
+      <div class="card dataset soon-box">Dataset coming soon</div>
+      <div class="card dataset soon-box">Dataset coming soon</div>
+      <div class="card dataset soon-box">Dataset coming soon</div>
     </div>
   </div>
 </section>
@@ -131,10 +145,11 @@
   </div>
 </section>
 
-{{ hero_chart|json_script:"hero-data" }}
+{% if bank %}{{ bank.chart|json_script:"hero-data" }}{% endif %}
 {% endblock %}
 
 {% block extra_js %}
+{% if bank %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 {% load static %}
 <script src="{% static 'js/fw-charts.js' %}"></script>
@@ -142,7 +157,8 @@
   (function () {
     var d = JSON.parse(document.getElementById("hero-data").textContent);
     fwLineChart(document.getElementById("hero-chart"), d.labels,
-      [{ label: "USD/LKR", data: d.values }], { fill: true, decimals: 2 });
+      [{ label: "USD/LKR (avg. buying)", data: d.values }], { fill: true, decimals: 2 });
   })();
 </script>
+{% endif %}
 {% endblock %}

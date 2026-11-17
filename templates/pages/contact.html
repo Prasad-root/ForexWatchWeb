@@ -1,23 +1,529 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Contact · {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+  /* Base Variables & Expanded Full-Width Layout Matching About Page */
+  .contact-wrapper {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --emerald: #10b981;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 2rem 4rem;
+    box-sizing: border-box;
+    color: var(--text-main);
+  }
+
+  /* Scroll Reveal Animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+
+  /* Hero Banner */
+  .contact-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 3rem;
+    align-items: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #2563eb;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  }
+  .contact-hero h1 {
+    font-size: 2.35rem;
+    line-height: 1.2;
+    margin: 0 0 0.85rem;
+    color: var(--primary);
+  }
+  .contact-hero p {
+    font-size: 1.06rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 720px;
+  }
+  .hero-graphic {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .floating-svg {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-9px); }
+  }
+
+  /* Main Split Grid: Form on Left, Info Cards on Right */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.85fr;
+    gap: 2.25rem;
+    align-items: start;
+  }
+
+  /* Form Card */
+  .contact-form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2.75rem;
+    box-shadow: 0 12px 30px -12px rgba(15, 23, 42, 0.06);
+  }
+  .form-card-header {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .form-card-header h2 {
+    font-size: 1.5rem;
+    margin: 0 0 0.35rem;
+    color: var(--primary);
+  }
+  .form-card-header p {
+    font-size: 0.94rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Interactive Topic Quick-Select Pills */
+  .topic-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 1.75rem;
+  }
+  .topic-pill {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .topic-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .topic-pill.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  /* Clean Form Field Styling (Compatible with _form_field.html) */
+  .contact-form-card form .field,
+  .contact-form-card form .form-group,
+  .contact-form-card form p {
+    margin-bottom: 1.35rem;
+  }
+  .contact-form-card label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin-bottom: 0.45rem;
+    color: var(--primary);
+  }
+  .contact-form-card input[type="text"],
+  .contact-form-card input[type="email"],
+  .contact-form-card select,
+  .contact-form-card textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.98rem;
+    font-family: inherit;
+    color: var(--text-main);
+    background: #ffffff;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .contact-form-card input:focus,
+  .contact-form-card select:focus,
+  .contact-form-card textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+  .contact-form-card textarea {
+    min-height: 140px;
+    resize: vertical;
+  }
+  .form-alert {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 0.9rem 1.1rem;
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    font-size: 0.92rem;
+  }
+  .hp {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Submit Button */
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    padding: 0.9rem 1.85rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+  }
+  .submit-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.45);
+  }
+  .submit-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Right Sidebar Cards */
+  .sidebar-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .info-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .info-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -12px rgba(15, 23, 42, 0.08);
+  }
+  .info-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+  .info-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .info-card h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--primary);
+  }
+  .info-card p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0 0 1rem;
+  }
+  .info-link {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .info-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Antler IT Solutions Developer Card */
+  .antler-contact-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.22);
+  }
+  .antler-tag {
+    color: #38bdf8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+  .antler-contact-card h3 {
+    font-size: 1.25rem;
+    margin: 0 0 0.75rem;
+    color: #ffffff;
+  }
+  .antler-contact-card p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin: 0 0 1.35rem;
+  }
+  .linkedin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: #0a66c2;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.65rem 1.2rem;
+    border-radius: 10px;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .linkedin-btn:hover {
+    background: #004182;
+    transform: translateY(-2px);
+  }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 960px) {
+    .contact-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 768px) {
+    .contact-wrapper {
+      padding: 1rem 1rem 3rem;
+    }
+    .contact-hero {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .hero-graphic {
+      justify-content: center;
+    }
+    .contact-form-card {
+      padding: 1.75rem 1.35rem;
+    }
+  }
+</style>
+
 <div class="page-head">
   <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Contact</div>
-  <h1>Contact us</h1>
-  <p>Found a wrong number, need data for a research project, or want to suggest a feature? Send us a note.</p>
 </div>
 
-<div class="card" style="max-width:640px;">
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
-    {% include "partials/_form_field.html" with field=form.name %}
-    {% include "partials/_form_field.html" with field=form.email %}
-    {% include "partials/_form_field.html" with field=form.topic %}
-    {% include "partials/_form_field.html" with field=form.message %}
-    <div class="hp" aria-hidden="true">{{ form.website }}</div>
-    <button class="btn btn-primary" type="submit">Send message</button>
-  </form>
+<div class="contact-wrapper">
+  <!-- Hero Section -->
+  <section class="contact-hero reveal">
+    <div>
+      <span class="contact-badge"><span class="pulse-dot"></span> We'd Love to Hear From You</span>
+      <h1>Contact {{ SITE_NAME }}</h1>
+      <p>Found a wrong number, need historical economic datasets for a research project, or want to suggest a new market tracker? Send a message directly to our team.</p>
+    </div>
+
+    <!-- Animated Message / Support SVG Illustration -->
+    <div class="hero-graphic">
+      <svg class="floating-svg" viewBox="0 0 300 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Contact Support Illustration">
+        <rect x="25" y="25" width="250" height="170" rx="18" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+        <!-- Envelope / Message Bubble -->
+        <rect x="52" y="55" width="196" height="110" rx="12" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2"/>
+        <path d="M56 62 L150 122 L244 62" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Status Notification Badge -->
+        <circle cx="242" cy="54" r="16" fill="#10B981"/>
+        <path d="M235 54 L240 59 L250 49" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <div class="contact-grid">
+    <!-- Left Column: Interactive Form Card -->
+    <div class="contact-form-card reveal delay-1">
+      <div class="form-card-header">
+        <h2>Send Us a Note</h2>
+        <p>Select a quick topic below or fill in the form. We typically respond within 1 business day.</p>
+      </div>
+
+      <!-- Quick Topic Helper Pills (Auto-selects form.topic if options match) -->
+      <div class="topic-pills" aria-label="Quick topic selection">
+        <button type="button" class="topic-pill" data-topic="data">Data Correction</button>
+        <button type="button" class="topic-pill" data-topic="research">Research &amp; Datasets</button>
+        <button type="button" class="topic-pill" data-topic="feature">Feature Suggestion</button>
+        <button type="button" class="topic-pill" data-topic="general">General Inquiry</button>
+      </div>
+
+      <form method="post" id="contactForm" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% include "partials/_form_field.html" with field=form.name %}
+        {% include "partials/_form_field.html" with field=form.email %}
+        {% include "partials/_form_field.html" with field=form.topic %}
+        {% include "partials/_form_field.html" with field=form.message %}
+        <div class="hp" aria-hidden="true">{{ form.website }}</div>
+
+        <button class="submit-btn" id="submitBtn" type="submit">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Send Message</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Column: Helpful Info & Antler IT Solutions Card -->
+    <aside class="sidebar-stack reveal delay-2">
+      <div class="info-card">
+        <div class="info-card-head">
+          <div class="info-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3>Report a Rate Discrepancy</h3>
+        </div>
+        <p>Spotted an outdated bank exchange rate or retail item price? Let us know the bank or item name and we will verify it against official notices immediately.</p>
+        <a href="{% url 'methodology' %}" class="info-link">View our verification process &rarr;</a>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-head">
+          <div class="info-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <h3>Academic &amp; Research Data</h3>
+        </div>
+        <p>University students, economists, and journalists can request custom historical CSV exports for exchange rates, fuel revisions, or CSE indices.</p>
+        <a href="{% url 'about' %}" class="info-link">Learn more about {{ SITE_NAME }} &rarr;</a>
+      </div>
+
+      <!-- Developer Spotlight Card -->
+      <div class="antler-contact-card">
+        <span class="antler-tag">Platform Engineering</span>
+        <h3>Built by Antler IT Solutions</h3>
+        <p>{{ SITE_NAME }} is engineered and maintained by <strong>Antler IT Solutions</strong>. Interested in custom software development, data platforms, or business partnerships?</p>
+        <a href="https://lk.linkedin.com/company/antleritsolutions" target="_blank" rel="noopener noreferrer" class="linkedin-btn">
+          <svg width="17" height="17" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+          Antler IT Solutions on LinkedIn
+        </a>
+      </div>
+    </aside>
+  </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. Scroll-Reveal Observer
+    const revealElements = document.querySelectorAll(".reveal");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+
+    // 2. Quick Topic Pills -> Sync with Django `form.topic` field
+    const pills = document.querySelectorAll(".topic-pill");
+    const topicField = document.querySelector('[name="topic"]');
+
+    pills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        pills.forEach((p) => p.classList.remove("selected"));
+        pill.classList.add("selected");
+
+        if (topicField) {
+          const keyword = pill.getAttribute("data-topic").toLowerCase();
+          if (topicField.tagName === "SELECT") {
+            const options = Array.from(topicField.options);
+            const match = options.find(
+              (opt) =>
+                opt.value.toLowerCase().includes(keyword) ||
+                opt.text.toLowerCase().includes(keyword)
+            );
+            if (match) topicField.value = match.value;
+          } else {
+            topicField.value = pill.textContent.trim();
+          }
+          topicField.focus();
+        }
+      });
+    });
+
+    // 3. Submit Button Loading State (prevents double-submits)
+    const contactForm = document.getElementById("contactForm");
+    const submitBtn = document.getElementById("submitBtn");
+    if (contactForm && submitBtn) {
+      contactForm.addEventListener("submit", () => {
+        submitBtn.disabled = true;
+        submitBtn.querySelector("span").textContent = "Sending...";
+      });
+    }
+  });
+</script>
 {% endblock %}

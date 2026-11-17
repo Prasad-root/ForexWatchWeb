@@ -1,55 +1,499 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load static humanize %}
 {% block title %}Stock market · {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+  /* Base Variables & Expanded Layout Matching Site Design System */
+  .cse-wrapper {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --emerald: #10b981;
+    --emerald-soft: #ecfdf5;
+    --rose: #e11d48;
+    --rose-soft: #fff1f2;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 2rem 4rem;
+    box-sizing: border-box;
+    color: var(--text-main);
+  }
+
+  /* Scroll Reveal Animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+
+  /* Coming Soon Hero Banner */
+  .cse-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 3rem;
+    align-items: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 60%, #fefce8 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3.25rem 3rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--amber-soft);
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    margin-bottom: 1.1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pulse-amber {
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    animation: pulseAmber 2s infinite;
+  }
+  @keyframes pulseAmber {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65); }
+    70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  }
+  .cse-hero h1 {
+    font-size: 2.35rem;
+    line-height: 1.2;
+    margin: 0 0 0.9rem;
+    color: var(--primary);
+  }
+  .cse-hero p {
+    font-size: 1.06rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin: 0 0 1.75rem;
+    max-width: 740px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: #ffffff;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffffff;
+    color: var(--primary);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  /* Animated Stock Candlestick SVG */
+  .hero-graphic {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .floating-svg {
+    width: 100%;
+    max-width: 310px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-9px); }
+  }
+
+  /* Indices Preview Row (ASPI & S&P SL20) */
+  .indices-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.25rem;
+  }
+  .index-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 10px 25px -12px rgba(15, 23, 42, 0.05);
+  }
+  .index-meta span {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+  .index-meta strong {
+    font-size: 1.85rem;
+    color: var(--primary);
+    display: block;
+  }
+  .sync-pill {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+  }
+
+  /* Movers & Leading Shares Preview Wrapper */
+  .market-preview-stage {
+    position: relative;
+    margin-bottom: 3rem;
+  }
+  .movers-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+  }
+  .preview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .preview-card-head {
+    padding: 1.15rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .preview-card-head h3 {
+    margin: 0;
+    font-size: 1.08rem;
+    color: var(--primary);
+  }
+  .badge-gainer {
+    background: var(--emerald-soft);
+    color: #047857;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+  }
+  .badge-loser {
+    background: var(--rose-soft);
+    color: #be123c;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+  }
+
+  /* Skeleton Placeholder Rows */
+  .skeleton-table {
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .skeleton-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .skeleton-row:last-child {
+    border-bottom: none;
+  }
+  .skel-bar {
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Floating Overlay Notice over Preview Tables */
+  .stage-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(248, 250, 252, 0.55);
+    backdrop-filter: blur(2.5px);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 2;
+  }
+  .overlay-box {
+    background: rgba(15, 23, 42, 0.92);
+    color: #ffffff;
+    padding: 1.5rem 2.25rem;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 480px;
+    box-shadow: 0 20px 35px -10px rgba(15, 23, 42, 0.3);
+  }
+  .overlay-box strong {
+    display: block;
+    font-size: 1.15rem;
+    color: #38bdf8;
+    margin-bottom: 0.4rem;
+  }
+  .overlay-box p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #cbd5e1;
+    line-height: 1.55;
+  }
+
+  /* Bottom Developer & Live Modules Card */
+  .bottom-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 18px;
+    padding: 2.5rem 2.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .bottom-banner h3 {
+    font-size: 1.35rem;
+    margin: 0 0 0.45rem;
+    color: #ffffff;
+  }
+  .bottom-banner p {
+    margin: 0;
+    color: #cbd5e1;
+    max-width: 760px;
+    line-height: 1.65;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 900px) {
+    .indices-grid,
+    .movers-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 768px) {
+    .cse-wrapper {
+      padding: 1rem 1rem 3rem;
+    }
+    .cse-hero {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .hero-actions {
+      justify-content: center;
+    }
+    .hero-graphic {
+      justify-content: center;
+    }
+    .bottom-banner {
+      padding: 1.75rem 1.35rem;
+    }
+  }
+</style>
+
 <div class="page-head">
   <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Stock market</div>
-  <h1>Colombo Stock Exchange</h1>
-  <p>Index levels, the day's biggest movers and prices for leading listed companies.</p>
 </div>
 
-<div class="grid grid-2" style="margin-bottom:1.25rem;">
-  {% for i in indices %}
-    <div class="card">
-      <div class="stat-label">{{ i.name }} ({{ i.symbol }})</div>
-      <div class="stat-value">{{ i.value|floatformat:2|intcomma }}</div>
-      {% include "partials/_change.html" with pct=i.change %}
+<div class="cse-wrapper">
+  <!-- Coming Soon Hero Banner -->
+  <section class="cse-hero reveal">
+    <div>
+      <span class="status-badge"><span class="pulse-amber"></span> Coming Soon · Market Feed Integration</span>
+      <h1>Stock Exchange</h1>
+      <p>We are integrating daily ASPI and S&amp;P SL20 index levels, top market gainers and losers, and leading listed company share prices into one clean dashboard. Live CSE tracking is launching soon.</p>
+      <div class="hero-actions">
+        <a href="{% url 'home' %}" class="btn-primary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Explore Live Bank &amp; Fuel Rates
+        </a>
+        <a href="{% url 'contact' %}" class="btn-secondary">Request CSE Alerts</a>
+      </div>
     </div>
-  {% endfor %}
+
+    <!-- Custom Animated Candlestick & Market Pulse SVG -->
+    <div class="hero-graphic">
+      <svg class="floating-svg" viewBox="0 0 310 230" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Colombo Stock Exchange Coming Soon Illustration">
+        <rect x="24" y="24" width="262" height="182" rx="18" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+        <!-- Header Pills -->
+        <rect x="44" y="44" width="68" height="22" rx="6" fill="#EFF6FF"/>
+        <text x="58" y="59" fill="#1D4ED8" font-size="11" font-weight="700" font-family="sans-serif">ASPI</text>
+        <rect x="120" y="44" width="84" height="22" rx="6" fill="#ECFDF5"/>
+        <text x="132" y="59" fill="#047857" font-size="11" font-weight="700" font-family="sans-serif">S&amp;P SL20</text>
+        <!-- Candlestick Bars -->
+        <line x1="66" y1="90" x2="66" y2="176" stroke="#10B981" stroke-width="2"/>
+        <rect x="58" y="108" width="16" height="46" rx="3" fill="#10B981"/>
+
+        <line x1="106" y1="104" x2="106" y2="182" stroke="#EF4444" stroke-width="2"/>
+        <rect x="98" y="120" width="16" height="38" rx="3" fill="#EF4444"/>
+
+        <line x1="146" y1="84" x2="146" y2="168" stroke="#10B981" stroke-width="2"/>
+        <rect x="138" y="98" width="16" height="50" rx="3" fill="#10B981"/>
+
+        <line x1="186" y1="92" x2="186" y2="174" stroke="#10B981" stroke-width="2"/>
+        <rect x="178" y="106" width="16" height="42" rx="3" fill="#10B981"/>
+
+        <line x1="226" y1="76" x2="226" y2="156" stroke="#2563EB" stroke-width="2"/>
+        <rect x="218" y="88" width="16" height="48" rx="3" fill="#2563EB"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Indices Preview Cards -->
+  <section class="indices-grid reveal delay-1">
+    <div class="index-card">
+      <div class="index-meta">
+        <span>All Share Price Index (ASPI)</span>
+        <strong>— , — — . — —</strong>
+      </div>
+      <span class="sync-pill">Connecting CSE Feed</span>
+    </div>
+
+    <div class="index-card">
+      <div class="index-meta">
+        <span>S&amp;P Sri Lanka 20 (S&amp;P SL20)</span>
+        <strong>— , — — . — —</strong>
+      </div>
+      <span class="sync-pill">Connecting CSE Feed</span>
+    </div>
+  </section>
+
+  <!-- Movers & Leading Shares Preview with Overlay -->
+  <section class="market-preview-stage reveal delay-2">
+    <div class="stage-overlay">
+      <div class="overlay-box">
+        <strong>CSE Market Feed Calibrating</strong>
+        <p>Daily top gainers, top losers, share volumes, and LKR closing prices are currently under integration by <strong>Antler IT Solutions</strong>.</p>
+      </div>
+    </div>
+
+    <div class="movers-grid">
+      <div class="preview-card">
+        <div class="preview-card-head">
+          <h3>Top Gainers</h3>
+          <span class="badge-gainer">+% Daily</span>
+        </div>
+        <div class="skeleton-table">
+          <div class="skeleton-row"><div class="skel-bar" style="width:75%;"></div><div class="skel-bar" style="width:60%;"></div><div class="skel-bar" style="width:55%;"></div></div>
+          <div class="skeleton-row"><div class="skel-bar" style="width:65%;"></div><div class="skel-bar" style="width:50%;"></div><div class="skel-bar" style="width:60%;"></div></div>
+          <div class="skeleton-row"><div class="skel-bar" style="width:80%;"></div><div class="skel-bar" style="width:55%;"></div><div class="skel-bar" style="width:50%;"></div></div>
+        </div>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-card-head">
+          <h3>Top Losers</h3>
+          <span class="badge-loser">-% Daily</span>
+        </div>
+        <div class="skeleton-table">
+          <div class="skeleton-row"><div class="skel-bar" style="width:70%;"></div><div class="skel-bar" style="width:55%;"></div><div class="skel-bar" style="width:60%;"></div></div>
+          <div class="skeleton-row"><div class="skel-bar" style="width:78%;"></div><div class="skel-bar" style="width:62%;"></div><div class="skel-bar" style="width:50%;"></div></div>
+          <div class="skeleton-row"><div class="skel-bar" style="width:62%;"></div><div class="skel-bar" style="width:48%;"></div><div class="skel-bar" style="width:58%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-card">
+      <div class="preview-card-head">
+        <h3>Leading Shares</h3>
+        <span style="font-size:0.85rem; color:var(--text-muted);">Prices in LKR</span>
+      </div>
+      <div class="skeleton-table">
+        <div class="skeleton-row"><div class="skel-bar" style="width:55%;"></div><div class="skel-bar" style="width:45%;"></div><div class="skel-bar" style="width:40%;"></div></div>
+        <div class="skeleton-row"><div class="skel-bar" style="width:65%;"></div><div class="skel-bar" style="width:50%;"></div><div class="skel-bar" style="width:45%;"></div></div>
+        <div class="skeleton-row"><div class="skel-bar" style="width:50%;"></div><div class="skel-bar" style="width:40%;"></div><div class="skel-bar" style="width:50%;"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Banner -->
+  <section class="bottom-banner reveal">
+    <div>
+      <h3>Developed by Antler IT Solutions</h3>
+      <p>While Colombo Stock Exchange tracking is being finalized, you can monitor daily commercial bank exchange rates, essential goods, and fuel prices directly on our home dashboard.</p>
+    </div>
+    <a href="{% url 'home' %}" class="btn-primary">Go to Home Dashboard &rarr;</a>
+  </section>
 </div>
 
-<div class="grid grid-2" style="margin-bottom:1.25rem;">
-  <div class="card card-flush">
-    <div class="card-head"><h3>Top gainers</h3></div>
-    <table class="table"><tbody>
-      {% for s in gainers %}<tr><td class="cell-title">{{ s.name }}<span class="cell-sub">{{ s.symbol }}</span></td><td class="num">{{ s.price|floatformat:2|intcomma }}</td><td class="num">{% include "partials/_change.html" with pct=s.change %}</td></tr>{% endfor %}
-    </tbody></table>
-  </div>
-  <div class="card card-flush">
-    <div class="card-head"><h3>Top losers</h3></div>
-    <table class="table"><tbody>
-      {% for s in losers %}<tr><td class="cell-title">{{ s.name }}<span class="cell-sub">{{ s.symbol }}</span></td><td class="num">{{ s.price|floatformat:2|intcomma }}</td><td class="num">{% include "partials/_change.html" with pct=s.change %}</td></tr>{% endfor %}
-    </tbody></table>
-  </div>
-</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const revealElements = document.querySelectorAll(".reveal");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
 
-<div class="card card-flush">
-  <div class="card-head"><h3>Leading shares</h3><span class="muted">Prices in LKR</span></div>
-  <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Company</th><th class="num">Price</th><th class="num">Volume</th><th class="num">Change</th></tr></thead>
-      <tbody>
-      {% for s in stocks %}
-        <tr>
-          <td class="cell-title">{{ s.name }}<span class="cell-sub">{{ s.symbol }}</span></td>
-          <td class="num">{{ s.price|floatformat:2|intcomma }}</td>
-          <td class="num">{{ s.volume|intcomma }}</td>
-          <td class="num">{% include "partials/_change.html" with pct=s.change %}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+    revealElements.forEach((el) => revealObserver.observe(el));
+  });
+</script>
 {% endblock %}
