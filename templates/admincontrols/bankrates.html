@@ -21,6 +21,44 @@
   .cp-steps span{flex:1;height:4px;border-radius:2px;background:rgba(128,128,128,.3)}
   .cp-steps span.on{background:#dc2626}
   .cp-scroll{max-height:55vh;overflow:auto}
+  .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+
+    .form-field label {
+      font-size: .82rem;
+      font-weight: 500;
+      opacity: .8;
+    }
+
+    .form-field input,
+    .form-field select {
+      padding: .45rem .75rem;
+      border: 1px solid rgba(128, 128, 128, .4);
+      border-radius: 6px;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-size: .9rem;
+      line-height: 1.4;
+      min-height: 36px;
+      box-sizing: border-box;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, .2);
+    }
+
+    /* Fix date picker icon contrast in dark mode */
+    .form-field input[type="date"] {
+      color-scheme: light dark;
+    }
 </style>
 
 <div class="page-head">
@@ -53,10 +91,10 @@
         <option value="">Custom…</option>
         <option value="0 * * * *">Every hour</option>
         <option value="0 */6 * * *">Every 6 hours</option>
-        <option value="0 6 * * *">Daily at 06:00</option>
-        <option value="0 6,12,18 * * *">3 times a day (06, 12, 18)</option>
+        <option value="0 10 * * *">Daily at 10:00</option>
+        <option value="10,12,18 * * *">3 times a day (10, 12, 18)</option>
       </select></div>
-    <div class="form-field"><label for="dag-cron">Cron expression</label><input id="dag-cron" placeholder="0 6 * * *" style="min-width:180px"></div>
+    <div class="form-field"><label for="dag-cron">Cron expression</label><input id="dag-cron" placeholder="0 10 * * *" style="min-width:180px"></div>
     <button type="button" class="btn btn-outline btn-sm" data-dag="schedule">Save schedule</button>
   </div>
 
@@ -79,10 +117,6 @@
 </div>
 
 {% if error %}<div class="cp-msg err">{{ error }}</div>{% endif %}
-{% if not has_run %}
-  <p class="muted">No per-extraction column found in <code>exchange_rates</code>, so each day is one row.
-  If a timestamp or run-id column exists, set <code>BANKRATES_RUN_COLUMN</code> in settings to split multiple extractions per day.</p>
-{% endif %}
 
 <div class="card card-flush"><div class="table-wrap">
   <table class="table">
@@ -292,7 +326,7 @@
       badge.className = "cp-badge " + (s.connected ? (s.state === "failed" ? "bad" : "ok") : "");
       $("dag-meta").textContent = s.connected ? `last run ${s.last_run || "—"} · next ${s.next_run || "—"}` : "";
       if (s.schedule) $("dag-cron").value = s.schedule;
-      dagNote(s.connected ? "" : "The extraction DAG isn't connected yet. The controls below are ready and will work once the DAG client is implemented.");
+      dagNote(s.connected ? "" : "The extraction DAG Connection Failed");
       if (d.runs.length) {
         $("dag-runs").innerHTML = d.runs.map((r) => `<tr><td>${esc(r.run_id)}</td><td>${esc(r.state)}</td><td>${esc(r.started)}</td><td>${esc(r.ended || "—")}</td><td>${esc(r.trigger)}</td></tr>`).join("");
       }
