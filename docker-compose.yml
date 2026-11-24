@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    container_name: forexwatch_web
+    env_file: .env
+    environment:
+      FOREX_DB_HOST: currency_data_db
+      FOREX_DB_PORT: "5432"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    networks: [shared]
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application -b 0.0.0.0:8000 --workers 3"
+
+networks:
+  shared:
+    external: true
+    name: forexwatch_shared

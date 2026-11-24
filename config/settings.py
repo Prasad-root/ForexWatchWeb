@@ -23,6 +23,7 @@ def env_list(name, default=""):
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-insecure-key-change-me")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 SITE_NAME = "ForexWatch.lk"
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "hello@forexwatch.lk")
@@ -60,6 +61,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -89,13 +92,12 @@ DATABASES = {
     },
     "forex_data": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("FOREX_DB_NAME", "forex_data"),
+        "NAME": os.getenv("FOREX_DB_NAME", "postgres"),
         "USER": os.getenv("FOREX_DB_USER", "postgres"),
         "PASSWORD": os.getenv("FOREX_DB_PASSWORD", ""),
         "HOST": os.getenv("FOREX_DB_HOST", "localhost"),
         "PORT": os.getenv("FOREX_DB_PORT", "5432"),
         "CONN_MAX_AGE": 60,
-        "OPTIONS": {"options": "-c default_transaction_read_only=on"}
     },
 }
 
@@ -111,8 +113,14 @@ TIME_ZONE = "Asia/Colombo"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Emails (password reset, verification, contact form) print to the console in development.
