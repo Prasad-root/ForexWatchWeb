@@ -1,42 +1,563 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Datasets · {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+  /* Base Variables & Expanded Layout Matching About & Contact Pages */
+  .datasets-wrapper {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --emerald: #10b981;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 2rem 4rem;
+    box-sizing: border-box;
+    color: var(--text-main);
+  }
+
+  /* Scroll Reveal Animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+
+  /* Under Development Hero Banner */
+  .dev-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 3rem;
+    align-items: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 60%, #fefce8 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3.25rem 3rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .dev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--amber-soft);
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    margin-bottom: 1.1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pulse-amber {
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    animation: pulseAmber 2s infinite;
+  }
+  @keyframes pulseAmber {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65); }
+    70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  }
+  .dev-hero h1 {
+    font-size: 2.35rem;
+    line-height: 1.2;
+    margin: 0 0 0.9rem;
+    color: var(--primary);
+  }
+  .dev-hero p {
+    font-size: 1.06rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin: 0 0 1.75rem;
+    max-width: 740px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: #ffffff;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffffff;
+    color: var(--primary);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  /* Animated SVG Illustration */
+  .hero-graphic {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .floating-svg {
+    width: 100%;
+    max-width: 310px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-9px); }
+  }
+  .gear-spin {
+    transform-origin: 236px 66px;
+    animation: spinSlow 12s linear infinite;
+  }
+  @keyframes spinSlow {
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Development Roadmap Progress Strip */
+  .roadmap-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 2.25rem 2.5rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 10px 25px -12px rgba(15, 23, 42, 0.06);
+  }
+  .roadmap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .roadmap-header h2 {
+    font-size: 1.4rem;
+    margin: 0;
+    color: var(--primary);
+  }
+  .progress-pill {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+  }
+  .progress-track {
+    width: 100%;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2563eb 0%, #10b981 100%);
+    border-radius: 999px;
+    transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .milestones-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+  .milestone {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+  .milestone-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .milestone.done .milestone-dot {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  .milestone.active .milestone-dot {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .milestone.upcoming .milestone-dot {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .milestone h4 {
+    margin: 0 0 0.25rem;
+    font-size: 0.98rem;
+    color: var(--primary);
+  }
+  .milestone p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Section Header */
+  .section-header {
+    margin-bottom: 1.75rem;
+  }
+  .section-header h2 {
+    font-size: 1.65rem;
+    color: var(--primary);
+    margin: 0 0 0.45rem;
+  }
+  .section-header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  /* Upcoming Datasets Preview Grid */
+  .datasets-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .dataset-preview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.85rem;
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .dataset-preview-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -12px rgba(15, 23, 42, 0.08);
+  }
+  .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+  }
+  .tag-list {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+  .tag {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+  }
+  .coming-soon-chip {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .dataset-preview-card h3 {
+    font-size: 1.2rem;
+    margin: 0 0 0.5rem;
+    color: var(--primary);
+  }
+  .dataset-preview-card p {
+    font-size: 0.94rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0 0 1.1rem;
+  }
+  .dataset-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    padding-top: 0.95rem;
+    border-top: 1px dashed var(--border-color);
+  }
+  .dataset-meta span strong {
+    color: var(--text-main);
+  }
+
+  /* Bottom Usage & Antler IT Note */
+  .bottom-info-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 18px;
+    padding: 2.5rem 2.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .bottom-info-card h3 {
+    font-size: 1.35rem;
+    margin: 0 0 0.5rem;
+    color: #ffffff;
+  }
+  .bottom-info-card p {
+    margin: 0;
+    color: #cbd5e1;
+    max-width: 780px;
+    line-height: 1.65;
+    font-size: 0.95rem;
+  }
+  .bottom-info-card a {
+    color: #38bdf8;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 960px) {
+    .milestones-grid,
+    .datasets-preview-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 768px) {
+    .datasets-wrapper {
+      padding: 1rem 1rem 3rem;
+    }
+    .dev-hero {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .hero-actions {
+      justify-content: center;
+    }
+    .hero-graphic {
+      justify-content: center;
+    }
+    .roadmap-card,
+    .bottom-info-card {
+      padding: 1.75rem 1.5rem;
+    }
+  }
+</style>
+
 <div class="page-head">
   <div class="crumbs"><a href="{% url 'home' %}">Home</a> / Datasets</div>
-  <h1>Datasets for education</h1>
-  <p>Free CSV downloads for coursework, teaching and research. Each file holds one year of daily history.</p>
 </div>
 
-{% if not user.is_authenticated %}
-  <div class="notice">
-    Downloads are free but need an account so we can keep the service sustainable and understand how the data is used.
-    <a href="{% url 'account_signup' %}">Create a free account</a> or <a href="{% url 'account_login' %}?next={% url 'datasets' %}">log in</a>.
-  </div>
-{% endif %}
-
-<div class="grid grid-2">
-  {% for d in datasets %}
-    <div class="card dataset">
-      <div>{% for t in d.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
-      <h3>{{ d.title }}</h3>
-      <p>{{ d.description }}</p>
-      <div class="dataset-meta">
-        <span>Format: CSV</span><span>Frequency: {{ d.frequency }}</span><span>Columns: date, {{ d.series|join:", " }}</span>
-      </div>
-      <div style="margin-top:.6rem;">
-        {% if user.is_authenticated %}
-          <a class="btn btn-primary btn-sm" href="{% url 'dataset_download' d.slug %}">Download CSV</a>
-        {% else %}
-          <a class="btn btn-outline btn-sm" href="{% url 'account_login' %}?next={% url 'dataset_download' d.slug %}">Log in to download</a>
-        {% endif %}
+<div class="datasets-wrapper">
+  <!-- Under Development Hero Banner -->
+  <section class="dev-hero reveal">
+    <div>
+      <span class="dev-badge"><span class="pulse-dot"></span> Under Active Development</span>
+      <h1>Educational Datasets Portal</h1>
+      <p>We are currently preparing clean, verified 1-year historical CSV datasets covering Sri Lanka's commercial bank exchange rates, essential goods, fuel revisions, and CSE market indices. Need early access for an academic project? Let our team know.</p>
+      <div class="hero-actions">
+        <a href="{% url 'contact' %}" class="btn-primary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Request Early Dataset Access
+        </a>
+        <a href="{% url 'methodology' %}" class="btn-secondary">Read Data Methodology</a>
       </div>
     </div>
-  {% endfor %}
+
+    <!-- Custom Animated CSV & Gear Illustration -->
+    <div class="hero-graphic">
+      <svg class="floating-svg" viewBox="0 0 310 230" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Datasets Under Development Illustration">
+        <rect x="24" y="28" width="240" height="175" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+        <!-- CSV Table Rows -->
+        <rect x="44" y="52" width="140" height="14" rx="4" fill="#DBEAFE"/>
+        <rect x="44" y="78" width="200" height="10" rx="3" fill="#E2E8F0"/>
+        <rect x="44" y="98" width="180" height="10" rx="3" fill="#E2E8F0"/>
+        <rect x="44" y="118" width="195" height="10" rx="3" fill="#E2E8F0"/>
+        <rect x="44" y="138" width="160" height="10" rx="3" fill="#E2E8F0"/>
+        <!-- CSV Pill -->
+        <rect x="44" y="160" width="64" height="24" rx="6" fill="#2563EB"/>
+        <text x="61" y="176" fill="#FFFFFF" font-size="11" font-weight="700" font-family="sans-serif">.CSV</text>
+        <!-- Animated Engineering Gear Badge -->
+        <circle cx="236" cy="66" r="30" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+        <g class="gear-spin">
+          <circle cx="236" cy="66" r="10" stroke="#D97706" stroke-width="3"/>
+          <path d="M236 48V52M236 80V84M218 66H222M250 66H254M223 53L226 56M246 76L249 79M249 53L246 56M226 76L223 79" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+
+  <!-- Preview of Planned Datasets -->
+  <section class="reveal delay-2">
+    <div class="section-header">
+      <h2>Planned Datasets in the Pipeline</h2>
+      <p>Here is a preview of the structured CSV packages currently being finalized by <strong>Antler IT Solutions</strong>.</p>
+    </div>
+
+    <div class="datasets-preview-grid">
+      {% if datasets %}
+        {% for d in datasets %}
+          <div class="dataset-preview-card">
+            <div class="card-top-row">
+              <div class="tag-list">
+                {% for t in d.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+              </div>
+              <span class="coming-soon-chip">In Preparation</span>
+            </div>
+            <h3>{{ d.title }}</h3>
+            <p>{{ d.description }}</p>
+            <div class="dataset-meta">
+              <span><strong>Format:</strong> CSV</span>
+              <span><strong>Frequency:</strong> {{ d.frequency }}</span>
+              <span><strong>Columns:</strong> date, {{ d.series|join:", " }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <!-- Default Preview Cards if `datasets` context is empty during development -->
+        <div class="dataset-preview-card">
+          <div class="card-top-row">
+            <div class="tag-list"><span class="tag">FX &amp; Banking</span><span class="tag">Daily</span></div>
+            <span class="coming-soon-chip">In Preparation</span>
+          </div>
+          <h3>Commercial Bank Exchange Rates (USD, EUR, GBP)</h3>
+          <p>One year of daily TT buying and selling rates across major Sri Lankan commercial banks, including daily market best rates.</p>
+          <div class="dataset-meta">
+            <span><strong>Format:</strong> CSV</span>
+            <span><strong>Frequency:</strong> Daily</span>
+            <span><strong>Columns:</strong> date, bank, currency, tt_buy, tt_sell</span>
+          </div>
+        </div>
+
+        <div class="dataset-preview-card">
+          <div class="card-top-row">
+            <div class="tag-list"><span class="tag">Commodities</span><span class="tag">Retail</span></div>
+            <span class="coming-soon-chip">In Preparation</span>
+          </div>
+          <h3>Essential Consumer Goods Retail Prices</h3>
+          <p>Daily retail market price movements for staple food items across key Colombo and regional markets.</p>
+          <div class="dataset-meta">
+            <span><strong>Format:</strong> CSV</span>
+            <span><strong>Frequency:</strong> Daily</span>
+            <span><strong>Columns:</strong> date, item, unit, min_price, max_price</span>
+          </div>
+        </div>
+
+        <div class="dataset-preview-card">
+          <div class="card-top-row">
+            <div class="tag-list"><span class="tag">Energy</span><span class="tag">Policy</span></div>
+            <span class="coming-soon-chip">In Preparation</span>
+          </div>
+          <h3>Sri Lanka Retail Fuel Price Revisions</h3>
+          <p>Historical log of official island-wide price adjustments for Octane 92, Octane 95, Auto Diesel, Super Diesel, and Kerosene.</p>
+          <div class="dataset-meta">
+            <span><strong>Format:</strong> CSV</span>
+            <span><strong>Frequency:</strong> Revision-based</span>
+            <span><strong>Columns:</strong> date, fuel_type, price_lkr, change_lkr</span>
+          </div>
+        </div>
+
+        <div class="dataset-preview-card">
+          <div class="card-top-row">
+            <div class="tag-list"><span class="tag">Equities</span><span class="tag">CSE</span></div>
+            <span class="coming-soon-chip">In Preparation</span>
+          </div>
+          <h3>Colombo Stock Exchange (CSE) Daily Indices</h3>
+          <p>Daily closing values, turnover, and share volume for ASPI and S&amp;P SL20 indices over the trailing 12 months.</p>
+          <div class="dataset-meta">
+            <span><strong>Format:</strong> CSV</span>
+            <span><strong>Frequency:</strong> Market Days</span>
+            <span><strong>Columns:</strong> date, aspi, sp_sl20, turnover_lkr</span>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Academic Citation & Terms Note -->
+  <section class="bottom-info-card reveal">
+    <div>
+      <h3>Using the Data Once Released</h3>
+      <p>All upcoming datasets will be free for educational and non-commercial research use. Please cite “<strong>{{ SITE_NAME }}</strong>” and the access date in coursework or publications. Review our <a href="{% url 'methodology' %}">methodology</a> for data sources and our <a href="{% url 'terms' %}">terms of use</a> for licensing details.</p>
+    </div>
+    {% if not user.is_authenticated %}
+      <a href="{% url 'account_signup' %}" class="btn-primary">Create Free Account for Launch</a>
+    {% endif %}
+  </section>
 </div>
 
-<div class="card" style="margin-top:1.5rem;">
-  <h3>Using the data</h3>
-  <p class="muted" style="margin:0;">Datasets are provided for educational and non-commercial research use. Please cite “{{ SITE_NAME }}” and the access date. See our <a href="{% url 'methodology' %}">methodology</a> for sources and definitions, and the <a href="{% url 'terms' %}">terms of use</a> for details.</p>
-</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. Scroll-Reveal Observer
+    const revealElements = document.querySelectorAll(".reveal");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+
+    // 2. Animate Progress Bar Fill
+    const progressBar = document.getElementById("devProgressBar");
+    if (progressBar) {
+      setTimeout(() => {
+        progressBar.style.width = progressBar.getAttribute("data-progress") || "75%";
+      }, 250);
+    }
+  });
+</script>
 {% endblock %}

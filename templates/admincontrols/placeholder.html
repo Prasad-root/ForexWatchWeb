@@ -1,0 +1,19 @@
+{% extends "admincontrols/panel_base.html" %}
+{% block title %}{{ title }} · Admin · {{ SITE_NAME }}{% endblock %}
+
+{% block panel %}
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'cp_overview' %}">Admin</a> / {{ title }}</div>
+  <h1>{{ title }}</h1>
+  <p>{{ blurb }}</p>
+</div>
+
+<div class="card">
+  <h3>Not developed yet</h3>
+  <p class="muted">This section is reserved. Planned:</p>
+  <ul>
+    {% for item in planned %}<li>{{ item }}</li>{% endfor %}
+  </ul>
+  <a class="btn btn-outline btn-sm" href="{% url 'cp_bankrates' %}">See the finished Bank rates section</a>
+</div>
+{% endblock %}

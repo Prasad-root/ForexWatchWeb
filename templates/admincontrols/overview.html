@@ -1,0 +1,41 @@
+{% extends "admincontrols/panel_base.html" %}
+{% block title %}Admin panel · {{ SITE_NAME }}{% endblock %}
+
+{% block panel %}
+<div class="page-head">
+  <h1>Admin panel</h1>
+  <p>Control the platform section by section. Only admins can see this area.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.25rem">
+  <div class="card"><div class="stat-label">Registered users</div><div class="stat-value">{{ total_users }}</div></div>
+  <div class="card"><div class="stat-label">Admins</div><div class="stat-value">{{ admin_count }}</div></div>
+  <div class="card"><div class="stat-label">Bank-rate days stored</div><div class="stat-value">{{ bank.days|default:"—" }}</div>
+    <span class="muted">{% if bank %}latest {{ bank.latest }} · {{ bank.records }} records{% else %}database unavailable{% endif %}</span></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem">
+  <div class="card"><h3>User management</h3><p class="muted">Promote or demote users.</p><a class="btn btn-primary btn-sm" href="{% url 'admin_users' %}">Open</a></div>
+  <div class="card"><h3>API keys</h3><p class="muted">Not developed yet.</p><a class="btn btn-outline btn-sm" href="{% url 'cp_api_keys' %}">Open</a></div>
+  <div class="card"><h3>Bank rates</h3><p class="muted">Daily extractions, data inspection, deletion and DAG control.</p><a class="btn btn-primary btn-sm" href="{% url 'cp_bankrates' %}">Open</a></div>
+  <div class="card"><h3>Commodities</h3><p class="muted">Not developed yet.</p><a class="btn btn-outline btn-sm" href="{% url 'cp_commodities' %}">Open</a></div>
+  <div class="card"><h3>Fuel</h3><p class="muted">Not developed yet.</p><a class="btn btn-outline btn-sm" href="{% url 'cp_fuel' %}">Open</a></div>
+  <div class="card"><h3>Stocks</h3><p class="muted">Not developed yet.</p><a class="btn btn-outline btn-sm" href="{% url 'cp_stocks' %}">Open</a></div>
+  <div class="card"><h3>Django admin</h3><p class="muted">Raw records (staff accounts only).</p><a class="btn btn-outline btn-sm" href="/django-admin/">Open</a></div>
+</div>
+
+<div class="cp-sec"><h2>Recent admin activity</h2></div>
+<div class="card card-flush"><div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
+    <tbody>
+    {% for a in recent %}
+      <tr><td>{{ a.created_at|date:"d M Y H:i" }}</td><td>{{ a.user.email|default:a.user.username|default:"—" }}</td>
+          <td>{{ a.section }}.{{ a.action }}</td><td>{{ a.target }}</td><td class="muted">{{ a.detail }}</td></tr>
+    {% empty %}
+      <tr><td colspan="5" class="muted">Nothing yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

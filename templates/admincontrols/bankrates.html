@@ -1,0 +1,345 @@
+{% extends "admincontrols/panel_base.html" %}
+{% block title %}Bank rates · Admin · {{ SITE_NAME }}{% endblock %}
+
+{% block panel %}
+<style>
+  .cp-row{cursor:pointer}
+  .cp-row:hover{background:rgba(128,128,128,.1)}
+  .cp-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+  .cp-modal.open{display:flex}
+  .cp-box{width:min(980px,100%);max-height:90vh;overflow:auto;margin:0}
+  .cp-box.narrow{width:min(520px,100%)}
+  .cp-badge{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-size:.78rem;border:1px solid rgba(128,128,128,.5)}
+  .cp-badge.ok{color:#16a34a;border-color:#16a34a}.cp-badge.bad{color:#dc2626;border-color:#dc2626}
+  .cp-danger{background:#dc2626;color:#fff;border:0;border-radius:8px;padding:.55rem 1rem;cursor:pointer;font:inherit}
+  .cp-danger:disabled{opacity:.45;cursor:not-allowed}
+  .cp-msg{margin:.75rem 0;padding:.6rem .8rem;border-radius:8px;border:1px solid rgba(128,128,128,.4)}
+  .cp-msg.err{border-color:#dc2626;color:#dc2626}.cp-msg.ok{border-color:#16a34a;color:#16a34a}
+  .cp-actions{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:1rem}
+  .cp-inline{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end}
+  .cp-steps{display:flex;gap:.4rem;margin-bottom:1rem}
+  .cp-steps span{flex:1;height:4px;border-radius:2px;background:rgba(128,128,128,.3)}
+  .cp-steps span.on{background:#dc2626}
+  .cp-scroll{max-height:55vh;overflow:auto}
+  .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+
+    .form-field label {
+      font-size: .82rem;
+      font-weight: 500;
+      opacity: .8;
+    }
+
+    .form-field input,
+    .form-field select {
+      padding: .45rem .75rem;
+      border: 1px solid rgba(128, 128, 128, .4);
+      border-radius: 6px;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-size: .9rem;
+      line-height: 1.4;
+      min-height: 36px;
+      box-sizing: border-box;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, .2);
+    }
+
+    /* Fix date picker icon contrast in dark mode */
+    .form-field input[type="date"] {
+      color-scheme: light dark;
+    }
+</style>
+
+<div class="page-head">
+  <div class="crumbs"><a href="{% url 'cp_overview' %}">Admin</a> / Bank rates</div>
+  <h1>Bank rates</h1>
+  <p>Daily extractions stored in the rates database. Click a row to inspect its data.</p>
+</div>
+
+<div id="flash" class="cp-msg" hidden></div>
+
+{# ---------- DAG control (UI only, connect later) ---------- #}
+<div class="cp-sec"><h2>Extraction DAG</h2><span class="muted" id="dag-id"></span></div>
+<div class="card">
+  <div class="cp-inline" style="justify-content:space-between">
+    <div>
+      <span class="cp-badge" id="dag-state">checking…</span>
+      <span class="muted" id="dag-meta" style="margin-left:.6rem"></span>
+    </div>
+    <div class="cp-actions" style="margin:0">
+      <button type="button" class="btn btn-primary btn-sm" data-dag="trigger">Run extraction now</button>
+      <button type="button" class="btn btn-outline btn-sm" data-dag="pause">Pause</button>
+      <button type="button" class="btn btn-outline btn-sm" data-dag="resume">Resume</button>
+    </div>
+  </div>
+  <div id="dag-note" class="cp-msg" hidden></div>
+
+  <div class="cp-inline" style="margin-top:1rem">
+    <div class="form-field"><label for="dag-preset">Schedule preset</label>
+      <select id="dag-preset">
+        <option value="">Custom…</option>
+        <option value="0 * * * *">Every hour</option>
+        <option value="0 */6 * * *">Every 6 hours</option>
+        <option value="0 10 * * *">Daily at 10:00</option>
+        <option value="10,12,18 * * *">3 times a day (10, 12, 18)</option>
+      </select></div>
+    <div class="form-field"><label for="dag-cron">Cron expression</label><input id="dag-cron" placeholder="0 10 * * *" style="min-width:180px"></div>
+    <button type="button" class="btn btn-outline btn-sm" data-dag="schedule">Save schedule</button>
+  </div>
+
+  <h3 style="margin-top:1.25rem">Recent runs</h3>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Run</th><th>State</th><th>Started</th><th>Ended</th><th>Trigger</th></tr></thead>
+    <tbody id="dag-runs"><tr><td colspan="5" class="muted">No run history yet.</td></tr></tbody>
+  </table></div>
+</div>
+
+{# ---------- Daily extraction rows ---------- #}
+<div class="cp-sec">
+  <h2>Daily extractions</h2>
+  <form method="get" class="cp-inline">
+    <div class="form-field"><label for="f-from">From</label><input id="f-from" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}"></div>
+    <div class="form-field"><label for="f-to">To</label><input id="f-to" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}"></div>
+    <button class="btn btn-outline btn-sm" type="submit">Filter</button>
+    {% if date_from or date_to %}<a class="btn btn-outline btn-sm" href="{% url 'cp_bankrates' %}">Clear</a>{% endif %}
+  </form>
+</div>
+
+{% if error %}<div class="cp-msg err">{{ error }}</div>{% endif %}
+
+<div class="card card-flush"><div class="table-wrap">
+  <table class="table">
+    <thead><tr>
+      <th>Date</th>{% if has_run %}<th>Extraction ({{ run_col }})</th>{% endif %}
+      <th class="num">Banks</th><th class="num">Currencies</th><th class="num">Records</th><th></th>
+    </tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr class="cp-row" data-day="{{ r.day|date:'Y-m-d' }}"{% if has_run %} data-run="{{ r.run }}"{% endif %} data-records="{{ r.records }}" data-banks="{{ r.banks }}">
+        <td>{{ r.day|date:"D, d M Y" }}</td>
+        {% if has_run %}<td>{{ r.run|default:"—" }}</td>{% endif %}
+        <td class="num">{{ r.banks }}</td><td class="num">{{ r.currencies }}</td><td class="num">{{ r.records }}</td>
+        <td class="num"><button type="button" class="btn btn-outline btn-sm js-del">Delete</button></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="muted">No extractions found.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+
+<div class="cp-actions" style="justify-content:space-between">
+  <span class="muted">{{ total }} extraction{{ total|pluralize }} · page {{ page }} of {{ pages }}</span>
+  <span>
+    {% if page > 1 %}<a class="btn btn-outline btn-sm" href="?page={{ page|add:'-1' }}{% if qs %}&{{ qs }}{% endif %}">← Newer</a>{% endif %}
+    {% if page < pages %}<a class="btn btn-outline btn-sm" href="?page={{ page|add:'1' }}{% if qs %}&{{ qs }}{% endif %}">Older →</a>{% endif %}
+  </span>
+</div>
+
+{# ---------- Detail popup ---------- #}
+<div class="cp-modal" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="dm-title">
+  <div class="card cp-box">
+    <div class="cp-inline" style="justify-content:space-between">
+      <h3 id="dm-title" style="margin:0">Extraction</h3>
+      <button type="button" class="btn btn-outline btn-sm" data-close>Close</button>
+    </div>
+    <p class="muted" id="dm-summary"></p>
+    <div class="form-field"><input id="dm-search" placeholder="Filter by bank or currency…"></div>
+    <div class="cp-scroll"><div class="table-wrap"><table class="table">
+      <thead id="dm-head"></thead><tbody id="dm-body"></tbody>
+    </table></div></div>
+    <div class="cp-actions" style="justify-content:flex-end">
+      <button type="button" class="cp-danger" id="dm-delete">Delete this extraction…</button>
+    </div>
+  </div>
+</div>
+
+{# ---------- Delete wizard ---------- #}
+<div class="cp-modal" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="xm-title">
+  <div class="card cp-box narrow">
+    <div class="cp-steps"><span id="xs1"></span><span id="xs2"></span><span id="xs3"></span></div>
+    <h3 id="xm-title" style="margin-top:0">Delete extraction</h3>
+    <p id="xm-target" style="font-weight:700"></p>
+
+    <div id="xstep1">
+      <p>This <strong>permanently</strong> removes every record of this extraction from the database. It also disappears from the public rates page and can't be undone.</p>
+      <label style="display:flex;gap:.5rem;align-items:flex-start;margin:.75rem 0">
+        <input type="checkbox" id="x-understand"> <span>I understand this can't be undone.</span></label>
+      <div class="form-field"><label for="x-phrase">Type <code id="x-phrase-hint"></code> to continue</label><input id="x-phrase" autocomplete="off" style="width:100%"></div>
+      <div class="cp-actions"><button type="button" class="btn btn-outline btn-sm" id="x1-next" disabled>Continue</button><button type="button" class="btn btn-outline btn-sm" data-xclose>Cancel</button></div>
+    </div>
+
+    <div id="xstep2" hidden>
+      <p>Re-enter your account password to confirm it's you.</p>
+      <div class="form-field"><label for="x-password">Password</label><input id="x-password" type="password" autocomplete="current-password" style="width:100%"></div>
+      <div class="cp-actions"><button type="button" class="btn btn-outline btn-sm" id="x2-next">Verify password</button><button type="button" class="btn btn-outline btn-sm" data-xclose>Cancel</button></div>
+    </div>
+
+    <div id="xstep3" hidden>
+      <p>Verified. <strong id="x-count"></strong> records will be deleted. The final button unlocks after a short wait. Last chance to cancel.</p>
+      <div class="cp-actions"><button type="button" class="cp-danger" id="x3-go" disabled>Delete permanently</button><button type="button" class="btn btn-outline btn-sm" data-xclose>Cancel</button></div>
+    </div>
+
+    <div id="x-err" class="cp-msg err" hidden></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block panel_js %}
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const CSRF = "{{ csrf_token }}";
+  const HAS_RUN = {{ has_run|yesno:"true,false" }};
+  const URLS = {
+    detail: "{% url 'cp_bank_detail' %}", delReq: "{% url 'cp_bank_delete_request' %}",
+    delConfirm: "{% url 'cp_bank_delete_confirm' %}", dagStatus: "{% url 'cp_bank_dag_status' %}",
+    dagAction: "{% url 'cp_bank_dag_action' %}",
+  };
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmt = (n) => n == null ? "—" : Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
+  async function post(url, body) {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF }, body: JSON.stringify(body) });
+    let data = {}; try { data = await res.json(); } catch (e) {}
+    return { ok: res.ok, status: res.status, data };
+  }
+  function flash(text, kind) {
+    const el = $("flash"); el.textContent = text; el.className = "cp-msg " + (kind || "ok"); el.hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  const targetOf = (row) => ({ day: row.dataset.day, run: HAS_RUN ? row.dataset.run : null,
+                               records: row.dataset.records, banks: row.dataset.banks });
+
+  // ---------------- detail popup ----------------
+  let current = null, detailRows = [], detailTypes = [];
+  const label = (t) => t.day + (t.run ? "  ·  " + t.run : "");
+
+  async function openDetail(t) {
+    current = t;
+    $("dm-title").textContent = "Extraction " + label(t);
+    $("dm-summary").textContent = "Loading…";
+    $("dm-head").innerHTML = ""; $("dm-body").innerHTML = ""; $("dm-search").value = "";
+    $("detail-modal").classList.add("open");
+    const qs = new URLSearchParams({ day: t.day }); if (t.run !== null) qs.set("run", t.run);
+    try {
+      const res = await fetch(URLS.detail + "?" + qs);
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || res.status);
+      detailRows = d.rows; detailTypes = d.types;
+      $("dm-summary").textContent = `${d.records} records · ${d.banks} banks · ${d.rows.length} bank/currency rows` + (d.truncated ? " (truncated)" : "");
+      $("dm-head").innerHTML = "<tr><th>Bank</th><th>Currency</th>" + d.types.map((x) => `<th class="num">${esc(x)}</th>`).join("") + "</tr>";
+      renderDetail();
+    } catch (e) { $("dm-summary").textContent = "Could not load: " + e.message; }
+  }
+  function renderDetail() {
+    const q = $("dm-search").value.trim().toLowerCase();
+    const rows = detailRows.filter((r) => !q || (r.bank + " " + r.currency).toLowerCase().includes(q));
+    $("dm-body").innerHTML = rows.map((r) => `<tr><td>${esc(r.bank)}</td><td>${esc(r.currency)}</td>` +
+      detailTypes.map((x) => `<td class="num">${fmt(r.rates[x])}</td>`).join("") + "</tr>").join("")
+      || `<tr><td colspan="${2 + detailTypes.length}" class="muted">No rows.</td></tr>`;
+  }
+  $("dm-search").addEventListener("input", renderDetail);
+  document.querySelectorAll("tr.cp-row").forEach((row) => row.addEventListener("click", (e) => {
+    if (e.target.closest(".js-del")) return;
+    openDetail(targetOf(row));
+  }));
+  document.querySelectorAll(".js-del").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation(); openDelete(targetOf(b.closest("tr")));
+  }));
+  document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => $("detail-modal").classList.remove("open")));
+  $("dm-delete").addEventListener("click", () => { $("detail-modal").classList.remove("open"); openDelete(current); });
+
+  // ---------------- delete wizard (3 steps, enforced on the server too) ----------------
+  let del = null, token = null, timer = null;
+  function showStep(n) {
+    [1, 2, 3].forEach((i) => { $("xstep" + i).hidden = i !== n; $("xs" + i).classList.toggle("on", i <= n); });
+    $("x-err").hidden = true;
+  }
+  function xerr(msg) { $("x-err").textContent = msg; $("x-err").hidden = false; }
+  function closeDelete() { clearInterval(timer); token = null; $("delete-modal").classList.remove("open"); }
+
+  function openDelete(t) {
+    del = t; token = null;
+    $("xm-target").textContent = label(t) + " — " + t.records + " records, " + t.banks + " banks";
+    $("x-phrase-hint").textContent = "DELETE " + t.day;
+    $("x-phrase").value = ""; $("x-password").value = ""; $("x-understand").checked = false; $("x1-next").disabled = true;
+    showStep(1); $("delete-modal").classList.add("open");
+  }
+  const gate = () => { $("x1-next").disabled = !($("x-understand").checked && $("x-phrase").value.trim() === "DELETE " + del.day); };
+  $("x-understand").addEventListener("change", gate);
+  $("x-phrase").addEventListener("input", gate);
+  $("x1-next").addEventListener("click", () => { showStep(2); $("x-password").focus(); });
+  document.querySelectorAll("[data-xclose]").forEach((b) => b.addEventListener("click", closeDelete));
+
+  $("x2-next").addEventListener("click", async () => {
+    $("x2-next").disabled = true;
+    const r = await post(URLS.delReq, { day: del.day, run: del.run, phrase: $("x-phrase").value, password: $("x-password").value });
+    $("x2-next").disabled = false;
+    if (!r.ok) { xerr(r.data.error || "Request failed."); return; }
+    token = r.data.token; $("x-count").textContent = r.data.count;
+    showStep(3);
+    let left = r.data.wait; const go = $("x3-go"); go.disabled = true;
+    go.textContent = `Delete permanently (${left}s)`;
+    clearInterval(timer);
+    timer = setInterval(() => {
+      left -= 1;
+      if (left > 0) { go.textContent = `Delete permanently (${left}s)`; return; }
+      clearInterval(timer); go.disabled = false; go.textContent = "Delete permanently";
+    }, 1000);
+  });
+
+  $("x3-go").addEventListener("click", async () => {
+    $("x3-go").disabled = true;
+    const r = await post(URLS.delConfirm, { token });
+    if (!r.ok) { xerr(r.data.error || "Delete failed."); return; }
+    closeDelete();
+    flash(`Deleted ${r.data.deleted} records.`, "ok");
+    setTimeout(() => location.reload(), 900);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    $("detail-modal").classList.remove("open"); closeDelete();
+  });
+
+  // ---------------- DAG control ----------------
+  function dagNote(text, kind) { const n = $("dag-note"); n.textContent = text; n.className = "cp-msg " + (kind || ""); n.hidden = !text; }
+  async function loadDag() {
+    try {
+      const d = await (await fetch(URLS.dagStatus)).json();
+      const s = d.status;
+      $("dag-id").textContent = d.dag_id;
+      const badge = $("dag-state");
+      badge.textContent = s.connected ? s.state : "not connected";
+      badge.className = "cp-badge " + (s.connected ? (s.state === "failed" ? "bad" : "ok") : "");
+      $("dag-meta").textContent = s.connected ? `last run ${s.last_run || "—"} · next ${s.next_run || "—"}` : "";
+      if (s.schedule) $("dag-cron").value = s.schedule;
+      dagNote(s.connected ? "" : "The extraction DAG Connection Failed");
+      if (d.runs.length) {
+        $("dag-runs").innerHTML = d.runs.map((r) => `<tr><td>${esc(r.run_id)}</td><td>${esc(r.state)}</td><td>${esc(r.started)}</td><td>${esc(r.ended || "—")}</td><td>${esc(r.trigger)}</td></tr>`).join("");
+      }
+    } catch (e) { $("dag-state").textContent = "unavailable"; }
+  }
+  $("dag-preset").addEventListener("change", (e) => { if (e.target.value) $("dag-cron").value = e.target.value; });
+  document.querySelectorAll("[data-dag]").forEach((b) => b.addEventListener("click", async () => {
+    const action = b.dataset.dag;
+    if (action === "trigger" && !confirm("Start an extraction run now?")) return;
+    const r = await post(URLS.dagAction, { action, cron: $("dag-cron").value });
+    if (r.ok) { dagNote("Done.", "ok"); loadDag(); } else { dagNote(r.data.error || "Failed.", "err"); }
+  }));
+  loadDag();
+})();
+</script>
+{% endblock %}

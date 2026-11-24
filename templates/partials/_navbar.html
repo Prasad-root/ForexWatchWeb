@@ -1,4 +1,28 @@
 {% url 'home' as home_url %}
+<style>
+@media (min-width: 901px) {
+  /* Make .nav-links fill the remaining space next to the logo */
+  .navbar-inner {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-inner .nav-links {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Equal auto margins on the first nav item and .nav-auth center the links in between */
+  .navbar-inner .nav-links > .dropdown {
+    margin-left: auto;
+  }
+
+  .navbar-inner .nav-links > .nav-auth {
+    margin-left: auto;
+  }
+}
+</style>
 <header class="navbar">
   <div class="wrap navbar-inner">
     <a class="logo" href="{% url 'home' %}" aria-label="{{ SITE_NAME }} home">

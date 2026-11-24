@@ -1,3 +1,56 @@
+<style>
+  /* Expand footer-grid from 4 columns to 5 columns on desktop to fit the Powered By column next to Company */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr 1.25fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .footer-powered {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .powered-link {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: inherit;
+    margin-top: 0.35rem;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .powered-link:hover {
+    transform: translateY(-2px);
+    opacity: 0.92;
+  }
+
+  .powered-link img {
+    height: 92px;
+    width: auto;
+    max-width: 240px;
+    border-radius: 14px;
+    object-fit: contain;
+    display: block;
+  }
+
+  @media (max-width: 960px) {
+    .footer-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
 <footer class="footer">
   <div class="wrap footer-grid">
     <div>
@@ -23,6 +76,12 @@
       <a href="{% url 'contact' %}">Contact</a>
       <a href="{% url 'privacy' %}">Privacy policy</a>
       <a href="{% url 'terms' %}">Terms of use</a>
+    </div>
+    <div class="footer-powered">
+      <h4>Powered by</h4>
+      <a href="https://www.aviorsys.com" target="_blank" rel="noopener noreferrer" class="powered-link" aria-label="Powered by AITS">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyy5IU2MnhblOIqA1bujBUzW92SRl9jWWATszIXFuZuQKK_5WimpnfBvk&s=10" alt="AITS">
+      </a>
     </div>
   </div>
   <div class="wrap footer-bottom">

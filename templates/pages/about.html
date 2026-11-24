@@ -1,23 +1,643 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}About · {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+  /* Base Variables & Expanded Full-Width Layout */
+  .about-wrapper {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --emerald: #10b981;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 2rem 4rem;
+    box-sizing: border-box;
+    color: var(--text-main);
+  }
+
+  /* Scroll Reveal Animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+  .delay-3 { transition-delay: 0.3s; }
+
+  /* Hero Section */
+  .about-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 3rem;
+    align-items: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3.5rem 3rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    margin-bottom: 1rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #2563eb;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  }
+  .about-hero h1 {
+    font-size: 2.4rem;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+    color: var(--primary);
+  }
+  .about-hero p {
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 760px;
+  }
+
+  /* Animated Hero Graphic */
+  .hero-graphic {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .floating-svg {
+    width: 100%;
+    max-width: 340px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Live Animated Stats Strip */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3.5rem;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.08);
+  }
+  .stat-number {
+    font-size: 2.15rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .stat-label {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Section Headings - Left-Aligned to Match Wide Layout */
+  .section-header {
+    text-align: left;
+    max-width: 850px;
+    margin: 0 0 2rem;
+  }
+  .section-header h2 {
+    font-size: 1.85rem;
+    color: var(--primary);
+    margin: 0 0 0.65rem;
+  }
+  .section-header p {
+    color: var(--text-muted);
+    line-height: 1.65;
+    font-size: 1.02rem;
+    margin: 0;
+  }
+
+  /* Interactive Feature Cards - 4 Columns on Wide Screens */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+  }
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.85rem;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: default;
+  }
+  .feature-card:hover {
+    transform: translateY(-6px);
+    border-color: #93c5fd;
+    box-shadow: 0 20px 30px -12px rgba(37, 99, 235, 0.12);
+  }
+  .icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
+  }
+  .feature-card:hover .icon-box {
+    transform: scale(1.1) rotate(-4deg);
+    background: var(--accent);
+    color: #ffffff;
+  }
+  .feature-card h3 {
+    font-size: 1.15rem;
+    margin: 0 0 0.6rem;
+    color: var(--primary);
+  }
+  .feature-card p {
+    font-size: 0.94rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Developer Spotlight (Antler IT Solutions) */
+  .developer-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 20px;
+    padding: 3.25rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
+    align-items: center;
+    margin-bottom: 3.5rem;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.25);
+  }
+  .developer-tag {
+    color: #38bdf8;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  .developer-card h2 {
+    font-size: 1.85rem;
+    margin: 0 0 1rem;
+    color: #ffffff;
+  }
+  .developer-card p {
+    color: #cbd5e1;
+    line-height: 1.7;
+    margin: 0 0 1.25rem;
+    max-width: 780px;
+  }
+  .linkedin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #0a66c2;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.4rem;
+    border-radius: 10px;
+    margin-top: 0.5rem;
+    transition: background 0.25s ease, transform 0.2s ease;
+  }
+  .linkedin-btn:hover {
+    background: #004182;
+    transform: translateY(-2px);
+  }
+  .developer-logo-box {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 2.25rem 2.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 260px;
+    text-align: center;
+    transition: transform 0.3s ease;
+  }
+  .developer-logo-box:hover {
+    transform: scale(1.04);
+  }
+  .developer-logo-box img {
+    max-height: 68px;
+    width: auto;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Full-Width FAQ / Data Integrity Accordion */
+  .accordion-section {
+    width: 100%;
+    margin: 0 0 3.5rem;
+  }
+  .accordion-item {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 0.85rem;
+    background: var(--card-bg);
+    overflow: hidden;
+  }
+  .accordion-trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.25rem 1.75rem;
+    text-align: left;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .accordion-trigger:hover {
+    background: #f8fafc;
+  }
+  .accordion-chevron {
+    transition: transform 0.3s ease;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .accordion-item.open .accordion-chevron {
+    transform: rotate(180deg);
+  }
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 0 1.75rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+  .accordion-item.open .accordion-content {
+    max-height: 220px;
+    padding: 0 1.75rem 1.35rem;
+  }
+
+  /* Full-Width Bottom CTA Banner */
+  .cta-banner {
+    background: var(--accent-soft);
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 2.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .cta-banner h3 {
+    margin: 0 0 0.4rem;
+    color: var(--primary);
+    font-size: 1.4rem;
+  }
+  .cta-banner p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .cta-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s ease;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary {
+    background: #fff;
+    color: var(--primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: border-color 0.2s ease;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 1100px) {
+    .features-grid, .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .about-wrapper {
+      padding: 1rem 1rem 3rem;
+    }
+    .about-hero, .developer-card {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .hero-graphic {
+      justify-content: center;
+    }
+    .features-grid, .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    .developer-logo-box { margin: 0 auto; }
+    .cta-banner {
+      flex-direction: column;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+  }
+</style>
+
 <div class="page-head">
   <div class="crumbs"><a href="{% url 'home' %}">Home</a> / About</div>
-  <h1>About {{ SITE_NAME }}</h1>
 </div>
-<div class="prose">
-  <p>{{ SITE_NAME }} brings Sri Lanka's everyday economic numbers into one clear, easy-to-read place: bank exchange rates, essential goods prices, fuel prices and the stock market.</p>
-  <h2>Our mission</h2>
-  <p>Good decisions start with good data. We make market information easy to find, easy to compare and easy to download, so households, businesses, students and researchers can all work from the same facts.</p>
-  <h2>What we offer</h2>
-  <ul>
-    <li>Daily bank buy and sell rates with the best rate highlighted.</li>
-    <li>Daily prices for essential goods and fuel.</li>
-    <li>CSE indices and leading share prices.</li>
-    <li>Historical analytics and free datasets for education.</li>
-  </ul>
-  <h2>Get in touch</h2>
-  <p>Questions, corrections or ideas? <a href="{% url 'contact' %}">Contact us</a>. Read how we collect and check our data on the <a href="{% url 'methodology' %}">methodology</a> page.</p>
+
+<div class="about-wrapper">
+  <!-- Hero Section -->
+  <section class="about-hero reveal">
+    <div>
+      <span class="about-badge"><span class="pulse-dot"></span> Sri Lanka Economic Tracker</span>
+      <h1>About {{ SITE_NAME }}</h1>
+      <p>{{ SITE_NAME }} brings Sri Lanka's everyday economic numbers into one clear, easy-to-read place: commercial bank exchange rates, essential goods prices, fuel revisions, and Colombo Stock Exchange (CSE) performance.</p>
+    </div>
+
+    <!-- Custom Animated Dashboard Illustration -->
+    <div class="hero-graphic">
+      <svg class="floating-svg" viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Economic Analytics Illustration">
+        <rect x="20" y="20" width="280" height="190" rx="18" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+        <circle cx="44" cy="42" r="5" fill="#EF4444"/>
+        <circle cx="60" cy="42" r="5" fill="#F59E0B"/>
+        <circle cx="76" cy="42" r="5" fill="#10B981"/>
+        <rect x="40" y="65" width="110" height="50" rx="10" fill="#EFF6FF"/>
+        <text x="52" y="87" fill="#1D4ED8" font-size="11" font-weight="700" font-family="sans-serif">USD / LKR</text>
+        <text x="52" y="105" fill="#0F172A" font-size="14" font-weight="800" font-family="sans-serif">Live Rates</text>
+        <rect x="165" y="65" width="115" height="50" rx="10" fill="#ECFDF5"/>
+        <text x="177" y="87" fill="#047857" font-size="11" font-weight="700" font-family="sans-serif">CSE ASPI</text>
+        <text x="177" y="105" fill="#0F172A" font-size="14" font-weight="800" font-family="sans-serif">Market Pulse</text>
+        <!-- Animated Bars -->
+        <rect x="48" y="155" width="24" height="35" rx="4" fill="#93C5FD"/>
+        <rect x="86" y="140" width="24" height="50" rx="4" fill="#60A5FA"/>
+        <rect x="124" y="148" width="24" height="42" rx="4" fill="#3B82F6"/>
+        <rect x="162" y="130" width="24" height="60" rx="4" fill="#2563EB"/>
+        <rect x="200" y="122" width="24" height="68" rx="4" fill="#1D4ED8"/>
+        <rect x="238" y="135" width="24" height="55" rx="4" fill="#10B981"/>
+        <!-- Trend Line -->
+        <path d="M58 148 L98 132 L136 140 L174 120 L212 112 L250 125" stroke="#0F172A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Animated Key Metrics -->
+  <section class="stats-grid reveal delay-1">
+    <div class="stat-card">
+      <span class="stat-number" data-target="15" data-suffix="+">0</span>
+      <span class="stat-label">Commercial Banks Tracked</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" data-target="4" data-suffix="">0</span>
+      <span class="stat-label">Core Economic Sectors</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" data-target="24" data-suffix="/7">0</span>
+      <span class="stat-label">Automated Data Updates</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" data-target="100" data-suffix="%">0</span>
+      <span class="stat-label">Free Public &amp; Academic Access</span>
+    </div>
+  </section>
+
+  <!-- Mission & Interactive Feature Cards -->
+  <section class="reveal delay-1">
+    <div class="section-header">
+      <h2>Our Mission &amp; What We Offer</h2>
+      <p>Good decisions start with reliable, accessible data. We organize Sri Lanka's core market indicators into a single dashboard so households, businesses, students, and researchers can work from the same facts.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon-box">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Commercial Bank Exchange Rates</h3>
+        <p>Daily TT buying and selling rates across major Sri Lankan banks, with the most competitive market rates automatically highlighted.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-box">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>
+        </div>
+        <h3>Essential Goods &amp; Fuel Prices</h3>
+        <p>Up-to-date retail market prices for daily necessities alongside official island-wide fuel price revisions at a glance.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-box">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <h3>Stock Market Tracking</h3>
+        <p>Key Colombo Stock Exchange (CSE) indices including ASPI and S&amp;P SL20, paired with leading share movements.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-box">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3>Open Data &amp; Analytics</h3>
+        <p>Historical trend visualizations and free, structured datasets engineered for academic research and market analysis.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Developer Spotlight: Antler IT Solutions -->
+  <section class="developer-card reveal">
+    <div>
+      <span class="developer-tag">Engineering &amp; Innovation</span>
+      <h2>Developed by Antler IT Solutions</h2>
+      <p>{{ SITE_NAME }} is designed, engineered, and maintained by <strong>Antler IT Solutions</strong>—a Sri Lankan software engineering and digital solutions company focused on building practical, data-driven web platforms and modern business applications.</p>
+      <p>We built this platform to demonstrate how clean user experience and automated data aggregation can solve everyday information gaps for the public.</p>
+      <a href="https://lk.linkedin.com/company/antleritsolutions" target="_blank" rel="noopener noreferrer" class="linkedin-btn">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        Connect on LinkedIn
+      </a>
+    </div>
+
+    <a href="https://lk.linkedin.com/company/antleritsolutions" target="_blank" rel="noopener noreferrer" class="developer-logo-box" style="text-decoration: none; color: inherit;">
+      <img src="{% static 'images/antler-logo.png' %}" alt="Antler IT Solutions Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div style="display:none; width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#38bdf8,#2563eb); align-items:center; justify-content:center; font-weight:800; font-size:1.4rem; color:#fff; margin-bottom:0.75rem;">
+        A
+      </div>
+      <strong style="font-size: 1.05rem; color: #fff;">Antler IT Solutions</strong>
+      <span style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;">Software Engineering · Sri Lanka</span>
+    </a>
+  </section>
+
+  <!-- Interactive Accordion for Data Integrity -->
+  <section class="accordion-section reveal">
+    <div class="section-header">
+      <h2>Data Integrity &amp; Transparency</h2>
+    </div>
+
+    <div class="accordion-item open">
+      <button class="accordion-trigger" type="button">
+        <span>Where does {{ SITE_NAME }} source its economic data?</span>
+        <svg class="accordion-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="accordion-content">
+        <p>Every figure published on {{ SITE_NAME }} is collected directly from official commercial bank rate sheets, government price gazettes, retail market bulletins, and Colombo Stock Exchange feeds.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" type="button">
+        <span>How often are exchange rates and prices updated?</span>
+        <svg class="accordion-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="accordion-content">
+        <p>Automated pipelines check for commercial bank updates throughout banking hours, while essential goods and fuel prices update immediately upon official revisions. Read more on our <a href="{% url 'methodology' %}">methodology</a> page.</p>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" type="button">
+        <span>Can students and researchers download the datasets?</span>
+        <svg class="accordion-chevron" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="accordion-content">
+        <p>Yes. Historical records and structured datasets are freely accessible for academic research, journalism, and personal financial planning.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom CTA -->
+  <section class="cta-banner reveal">
+    <div>
+      <h3>Questions, corrections, or dataset ideas?</h3>
+      <p>Explore how we verify our numbers or reach out directly to the Antler IT Solutions team.</p>
+    </div>
+    <div class="cta-actions">
+      <a href="{% url 'contact' %}" class="btn-primary">Contact Our Team</a>
+      <a href="{% url 'methodology' %}" class="btn-secondary">Read Methodology</a>
+    </div>
+  </section>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const revealElements = document.querySelectorAll(".reveal");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+
+    const counters = document.querySelectorAll(".stat-number");
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = +el.getAttribute("data-target");
+          const suffix = el.getAttribute("data-suffix") || "";
+          const duration = 1200;
+          const stepTime = 20;
+          const steps = duration / stepTime;
+          const increment = target / steps;
+          let current = 0;
+
+          const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+              el.textContent = target + suffix;
+              clearInterval(timer);
+            } else {
+              el.textContent = Math.ceil(current) + suffix;
+            }
+          }, stepTime);
+
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    counters.forEach((counter) => counterObserver.observe(counter));
+
+    const triggers = document.querySelectorAll(".accordion-trigger");
+    triggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        const item = trigger.parentElement;
+        const isOpen = item.classList.contains("open");
+        document.querySelectorAll(".accordion-item").forEach((i) => i.classList.remove("open"));
+        if (!isOpen) item.classList.add("open");
+      });
+    });
+  });
+</script>
 {% endblock %}
